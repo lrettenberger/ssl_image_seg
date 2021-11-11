@@ -1,4 +1,6 @@
 import importlib
+from DLIP.utils.loading.load_submodule import load_submodule
+from difflib import get_close_matches
 
 def load_class(module_path: str, class_name: str):
     """ Loads a class from a given module and object name.
@@ -13,7 +15,9 @@ def load_class(module_path: str, class_name: str):
     Returns:
         (Class): The class.
     """
-    module = importlib.import_module(f"DLIP.{module_path}")
-    if class_name in dir(module):
-        return getattr(module, class_name)
+    module_lst = load_submodule(f"{module_path}")
+    module_names = [module.__name__ for module in module_lst]
+    best_matches = get_close_matches(class_name,module_names)
+    if len(best_matches)>0:
+        return module_lst[module_names.index(best_matches[0])]
     raise ModuleNotFoundError(f'Cant find class {class_name} in {module_path}.')
