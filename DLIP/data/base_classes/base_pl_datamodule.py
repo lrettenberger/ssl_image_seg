@@ -9,8 +9,9 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from DLIP.data.base_classes.base_dataset import BaseDataset
 
-from DLIP.data.base_classes.custom_collate_fcn import custom_collate
-from DLIP.data.base_classes.dataloader_worker_init import seed_worker
+from DLIP.utils.data_preparation.custom_collate import custom_collate
+from DLIP.utils.data_preparation.seed_worker import seed_worker
+
 
 class BasePLDataModule(pl.LightningDataModule):
     def __init__(
