@@ -3,7 +3,10 @@ import random
 import tifffile
 import cv2
 import numpy as np
+
 from DLIP.data.base_classes.base_pl_datamodule import BasePLDataModule
+from DLIP.data.base_classes.semantic_segmentation.base_seg_dataset import BaseSegmentationDataset
+
 
 class GenericSegmentationDataModule(BasePLDataModule):
     def __init__(
@@ -49,10 +52,10 @@ class GenericSegmentationDataModule(BasePLDataModule):
         self.val_transforms = val_transforms
         self.test_transforms = test_transforms
         self.return_unlabeled_trafos = return_unlabeled_trafos
-        self.labeled_train_dataset: GenericSegmentationDataset = None
-        self.unlabeled_train_dataset: GenericSegmentationDataset = None
-        self.val_dataset: GenericSegmentationDataset = None
-        self.test_dataset: GenericSegmentationDataset = None
+        self.labeled_train_dataset: BaseSegmentationDataset = None
+        self.unlabeled_train_dataset: BaseSegmentationDataset = None
+        self.val_dataset: BaseSegmentationDataset = None
+        self.test_dataset: BaseSegmentationDataset = None
         self.n_classes = n_classes
         self.samples_data_format, self.labels_data_format = self._determine_data_format()
         print(self.samples_data_format, self.labels_data_format)
@@ -60,7 +63,7 @@ class GenericSegmentationDataModule(BasePLDataModule):
         self.__init_datasets()
 
     def __init_datasets(self):
-        self.labeled_train_dataset = GenericSegmentationDataset(
+        self.labeled_train_dataset = BaseSegmentationDataset(
             root_dir=self.train_labeled_root_dir, 
             transforms=self.train_transforms,
             samples_data_format=self.samples_data_format,
@@ -71,7 +74,7 @@ class GenericSegmentationDataModule(BasePLDataModule):
         for _ in range(int(len(self.labeled_train_dataset) * (1 - self.dataset_size))):
             self.labeled_train_dataset.pop_sample(random.randrange(len(self.labeled_train_dataset)))
 
-        self.val_dataset = GenericSegmentationDataset(
+        self.val_dataset = BaseSegmentationDataset(
             root_dir=self.train_labeled_root_dir, 
             transforms=self.val_transforms,
             empty_dataset=True,
@@ -80,7 +83,7 @@ class GenericSegmentationDataModule(BasePLDataModule):
             map_look_up=self.map_look_up
         )
 
-        self.unlabeled_train_dataset = GenericSegmentationDataset(
+        self.unlabeled_train_dataset = BaseSegmentationDataset(
             root_dir=self.train_unlabeled_root_dir,
             transforms=self.train_transforms,
             labels_available=False,
@@ -90,7 +93,7 @@ class GenericSegmentationDataModule(BasePLDataModule):
             map_look_up=self.map_look_up
         )
         
-        self.test_dataset = GenericSegmentationDataset(
+        self.test_dataset = BaseSegmentationDataset(
             root_dir=self.test_labeled_root_dir, 
             transforms=self.test_transforms,
             samples_data_format=self.samples_data_format,

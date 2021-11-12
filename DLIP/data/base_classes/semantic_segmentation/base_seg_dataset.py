@@ -7,7 +7,7 @@ import cv2
 from DLIP.data.base_classes.base_dataset import BaseDataset
 
 
-class GenericSegmentationDataset(BaseDataset):
+class BaseSegmentationDataset(BaseDataset):
     def __init__(
         self,
         root_dir: str,

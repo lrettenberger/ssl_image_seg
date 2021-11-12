@@ -6,7 +6,7 @@
     An example implementation can be found at: DLIP.data.example_dataset.example_dataset.py     
 
 """
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import List
 from torch.utils.data import Dataset
 import logging
