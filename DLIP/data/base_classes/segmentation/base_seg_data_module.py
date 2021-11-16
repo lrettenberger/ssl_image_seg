@@ -5,10 +5,10 @@ import cv2
 import numpy as np
 
 from DLIP.data.base_classes.base_pl_datamodule import BasePLDataModule
-from DLIP.data.base_classes.semantic_segmentation.base_seg_dataset import BaseSegmentationDataset
+from DLIP.data.base_classes.segmentation.base_seg_dataset import BaseSegmentationDataset
 
 
-class GenericSegmentationDataModule(BasePLDataModule):
+class BaseSegmentationDataModule(BasePLDataModule):
     def __init__(
         self,
         root_dir: str,
