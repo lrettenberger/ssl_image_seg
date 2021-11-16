@@ -16,7 +16,7 @@ class GenericSegmentationDataModule(BasePLDataModule):
         batch_size = 1,
         dataset_size = 1.0,
         val_to_train_ratio = 0,
-        initial_labeled_ratio=None,
+        initial_labeled_ratio= 1.0,
         train_transforms=None,
         train_transforms_unlabeled=None,
         val_transforms=None,
@@ -25,19 +25,17 @@ class GenericSegmentationDataModule(BasePLDataModule):
         num_workers=0,
         pin_memory=False,
         shuffle=True,
-        drop_last=False,
-        initial_labeled_size=None,
+        drop_last=False
     ):
         super().__init__(
             dataset_size=dataset_size,
             batch_size = batch_size,
             val_to_train_ratio = val_to_train_ratio,
-            initial_labeled_ratio = initial_labeled_ratio,
             num_workers = num_workers,
             pin_memory = pin_memory,
             shuffle = shuffle,
             drop_last = drop_last,
-            initial_labeled_size = initial_labeled_size,
+            initial_labeled_ratio = initial_labeled_ratio,
         )
         self.root_dir = root_dir
         self.train_labeled_root_dir     = os.path.join(self.root_dir, "train")
@@ -58,7 +56,6 @@ class GenericSegmentationDataModule(BasePLDataModule):
         self.test_dataset: BaseSegmentationDataset = None
         self.n_classes = n_classes
         self.samples_data_format, self.labels_data_format = self._determine_data_format()
-        print(self.samples_data_format, self.labels_data_format)
         self.map_look_up = self._determine_label_maps()
         self.__init_datasets()
 

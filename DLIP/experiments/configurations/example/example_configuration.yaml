@@ -1,0 +1,76 @@
+#  This file describes configuration details for executing the Unet architecture on the example dataset.
+
+
+# Name of this specific experiment
+experiment.name:
+  value: example-experiment
+# Seed of this experiment to ensure reproducibility.
+experiment.seed:
+  value: 1337
+
+# Model Configuration
+model.name:
+  value: ExampleClassifier
+model.params.input_channels:
+  value: 3
+model.params.num_classes:
+  value: 1
+model.params.image_dimensions:
+  value: [256, 256]
+model.loss_fcn:
+  value: BCELoss
+
+# Optimizer
+model.optimizer.type:
+  value: Adam
+model.optimizer.params.lr:
+  value: 0.0001
+model.optimizer.params.params:
+  value: ExampleClassifier
+# LR Scheduler
+model.optimizer.lrs.type:
+  value: ReduceLROnPlateau
+model.optimizer.lrs.params.factor:
+  value: 0.5
+model.optimizer.lrs.params.patience:
+  value: 5
+model.optimizer.lrs.params.verbose:
+  value: False
+model.optimizer.lrs.params.cooldown:
+  value: 0
+model.optimizer.lrs.params.min_lr:
+  value: 0.00001
+
+
+# Trainer Configuration
+train.trainer.max_epochs:
+  value: 200
+train.trainer.num_sanity_val_steps:
+  value: 0
+train.trainer.gpus:
+  value: 1
+train.trainer.reload_dataloaders_every_epoch:
+  value: false
+
+# Data Configuration
+data.datamodule.name:
+  value: ExamplePLDatamodule
+data.datamodule.arguments.number_of_images:
+  value: 100
+data.datamodule.arguments.val_to_train_ratio:
+  value: 0.2
+data.datamodule.arguments.batch_size:
+  value: 20
+
+
+# Callbacks Configuration
+train.callbacks.save_k_top_models:
+  value: 1
+
+# General Augmentations
+data.img_processing.img_size:
+  value: [256, 256]
+data.img_processing.img_type:
+  value: rgb_8_bit
+data.img_processing.replay_processing_pipeline:
+  value: False

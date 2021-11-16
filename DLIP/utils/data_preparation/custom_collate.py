@@ -3,7 +3,7 @@ collate samples fetched from dataset into Tensor(s).
 These **needs** to be in global scope since Py2 doesn't support serializing
 static methods.
 """
-
+import logging
 import torch
 import re
 import collections
@@ -85,7 +85,7 @@ def custom_collate(batch):
         transposed = zip(*batch)
         return [custom_collate(samples) for samples in transposed]
     else:
-        print("gdf")
+        logging.info("gdf")
 
 
     raise TypeError(default_collate_err_msg_format.format(elem_type))
