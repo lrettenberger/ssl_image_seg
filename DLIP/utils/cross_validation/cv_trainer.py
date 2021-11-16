@@ -38,8 +38,6 @@ class CVTrainer:
                                  'attribute.')
         new_experiment_name = getattr(logger, logger_key) + f'/fold_{fold_idx}'
         logger._name = new_experiment_name
-        print(logger_key)
-        #setattr(logger, logger_key, new_experiment_name)
 
     @staticmethod
     def update_modelcheckpoint(model_ckpt_callback: ModelCheckpoint, fold_idx: int):
