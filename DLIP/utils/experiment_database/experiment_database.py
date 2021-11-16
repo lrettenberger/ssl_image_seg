@@ -1,4 +1,5 @@
 import sqlite3
+import logging
 from sqlite3.dbapi2 import Error
 from contextlib import closing
 
@@ -13,7 +14,7 @@ class ExperimentDatabase():
             self.create_pretexts_if_non_existing()
             self.create_downstreams_if_non_existing()
         except Error as e:
-            print(e)
+            logging.error(e)
             
     @property
     def create_pretext_task_command(self):
@@ -53,11 +54,11 @@ class ExperimentDatabase():
                 c.execute(''' SELECT count(name) FROM sqlite_master WHERE type='table' AND name='Pretexts' ''')
                 #if the count is 1, then table exists
                 if c.fetchone()[0]!=1 : 
-                    print('Pretexts Table does not exist.')
+                    logging.info('Pretexts Table does not exist.')
                     c.execute(self.create_pretext_task_command)
                     self.conn.commit()
         except Error as e:
-                print(e)
+                logging.error(e)
 
     def create_downstreams_if_non_existing(self):
         try:
@@ -65,11 +66,11 @@ class ExperimentDatabase():
                 c.execute(''' SELECT count(name) FROM sqlite_master WHERE type='table' AND name='Downstreams' ''')
                 #if the count is 1, then table exists
                 if c.fetchone()[0]!=1 : 
-                    print('Downstreams Table does not exist.')
+                    logging.info('Downstreams Table does not exist.')
                     c.execute(self.create_downstream_taks_command)
                     self.conn.commit()
         except Error as e:
-            print(f'ERROR: {e}')
+            logging.error(f'ERROR: {e}')
     
     def insert_pretext(self, experiment_name, name, dataset, ssl_method, experiment_dir, checkpoint_path, config):
         sql = f' INSERT INTO Pretexts(experiment_name, name, dataset, ssl_method, experiment_dir, checkpoint_path, config,finished) VALUES(?,?,?,?,?,?,?,?)'
@@ -89,7 +90,7 @@ class ExperimentDatabase():
                 self.conn.commit()
                 return c.lastrowid
         except Error as e:
-            print(f'ERROR: {e}')
+            logging.error(f'ERROR: {e}')
 
     def insert_downstream(self, name, dataset, ssl_method, checkpoint_path, config, pretext_id):
         sql = f' INSERT INTO Downstreams(name, dataset, sl_method, checkpoint_path, config, pretext_id, finished) VALUES(?,?,?,?,?,?,?)'
@@ -107,7 +108,7 @@ class ExperimentDatabase():
                 self.conn.commit()
                 return c.lastrowid
         except Error as e:
-            print(f'ERROR: {e}')
+            logging.error(f'ERROR: {e}')
 
 
     def get_pretext_id_by_name(self,name):
@@ -117,11 +118,11 @@ class ExperimentDatabase():
                 c.execute(sql,(name,))
                 res = c.fetchall()
                 if len(res) == 0 :
-                    print(f'Pretext {name} does not exist.')
+                    logging.info(f'Pretext {name} does not exist.')
                     return None
                 return res[0][0]
         except Error as e:
-            print(f'ERROR: {e}')
+            logging.error(f'ERROR: {e}')
     
     def update_pretext_status(self,id:int,finished:bool):
         sql = f"UPDATE Pretexts SET finished = ? WHERE id = ? "
@@ -130,4 +131,4 @@ class ExperimentDatabase():
                 c.execute(sql,(finished,id))
                 self.conn.commit()
         except Error as e:
-                print(e) 
+                logging.error(e) 

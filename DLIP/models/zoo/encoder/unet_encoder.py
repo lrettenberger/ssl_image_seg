@@ -1,7 +1,7 @@
 from typing import List
 from torch.nn.modules.container import ModuleList
 import torch.nn as nn
-import torch
+import logging
 import numpy as np
 
 from DLIP.models.zoo.building_blocks.double_conv import DoubleConv
@@ -17,7 +17,7 @@ class UnetEncoder(nn.Module):
     ):
         super().__init__()
         if bilinear == True:
-            print("Bilinear Upsampling is currently not supported. Ignoring.")
+            logging.info("Bilinear Upsampling is currently not supported. Ignoring.")
         self.bilinear = False
         factor = 2 if self.bilinear else 1
         encoder_filters = [input_channels] + encoder_filters
