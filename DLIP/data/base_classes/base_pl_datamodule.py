@@ -19,7 +19,7 @@ class BasePLDataModule(pl.LightningDataModule):
             dataset_size: float,
             batch_size: int,
             val_to_train_ratio: int,
-            initial_labeled_size: float,
+            initial_labeled_ratio: float,
             num_workers: int,
             pin_memory: bool,
             shuffle: bool,
@@ -36,7 +36,7 @@ class BasePLDataModule(pl.LightningDataModule):
             val_to_train_ratio (int):
                 How many samples should be used vor validation. Relative value. 
                 0.2 means 20\% of samples are used for validation.
-            initial_labeled_size (float):
+            initial_labeled_ratio (float):
                 How many samples should be initially labeled.
             num_workers (int):
                 Number of workers (processes) used by PL-Lightning.
@@ -56,7 +56,7 @@ class BasePLDataModule(pl.LightningDataModule):
         self.pin_memory         = pin_memory
         self.shuffle            = shuffle
         self.drop_last          = drop_last
-        self.initial_labeled_size = initial_labeled_size
+        self.initial_labeled_ratio = initial_labeled_ratio
         # The following variables should be initialized by the implementing class
         self.labeled_train_dataset: BaseDataset = None
         self.unlabeled_train_dataset: BaseDataset = None
@@ -151,7 +151,6 @@ class BasePLDataModule(pl.LightningDataModule):
                 for _ in range(
                     num_val_samples
                 ):
-                    print(len(self.labeled_train_dataset))
                     self.val_dataset.add_sample(
                         self.labeled_train_dataset.pop_sample(
                             random.randrange(len(self.labeled_train_dataset))
@@ -183,22 +182,9 @@ class BasePLDataModule(pl.LightningDataModule):
 
 
     def assign_labeled_unlabeled_split(self):
-        if self.initial_labeled_size is None:
-            for _ in range(int(len(self.labeled_train_dataset) * (1 - self.labeled_ratio))):
-                self.unlabeled_train_dataset.add_sample(
-                    self.labeled_train_dataset.pop_sample(
-                        random.randrange(len(self.labeled_train_dataset))
-                    )
+        for _ in range(int(len(self.labeled_train_dataset) * (1 - self.initial_labeled_ratio))):
+            self.unlabeled_train_dataset.add_sample(
+                self.labeled_train_dataset.pop_sample(
+                    random.randrange(len(self.labeled_train_dataset))
                 )
-        else:
-            if len(self.labeled_train_dataset)>=self.initial_labeled_size:
-                num_pops = len(self.labeled_train_dataset) - self.initial_labeled_size
-                for _ in range(num_pops):
-                    self.unlabeled_train_dataset.add_sample(
-                        self.labeled_train_dataset.pop_sample(
-                            random.randrange(len(self.labeled_train_dataset))
-                        )
-                    )
-            else:
-                raise ValueError(f"Dataset is smaller than {self.initial_labeled_size}")
-        self.unlabeled_train_dataset.resort_samples()
+            )

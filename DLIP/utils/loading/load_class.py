@@ -20,4 +20,4 @@ def load_class(module_path: str, class_name: str):
     best_matches = get_close_matches(class_name,module_names)
     if len(best_matches)>0:
         return module_lst[module_names.index(best_matches[0])]
-    raise ModuleNotFoundError(f'Cant find class {class_name} in {module_path}.')
+    return None

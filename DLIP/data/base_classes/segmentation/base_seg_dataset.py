@@ -74,13 +74,11 @@ class BaseSegmentationDataset(BaseDataset):
         if self.labels_available:
             # load label map
             label_path = os.path.join(self.labels, f"{self.indices[idx]}_label.{self.labels_data_format}")
-            print(label_path)
             label_img = tifffile.imread(label_path) if self.labels_data_format=="tif" else cv2.imread(label_path,-1)
 
             label_one_hot = np.zeros((label_img.shape[0],label_img.shape[1],len(self.map_look_up)), dtype=np.float32)
             for key, value in self.map_look_up.items():
                 label_one_hot[label_img==value,key] = 1.0
-            print(label_one_hot.shape)
         else:
             label_one_hot = np.zeros((sample_img.shape))
 

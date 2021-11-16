@@ -14,17 +14,16 @@ class ExampleDataset(BaseDataset):
         # If the number of images is 0 (or smaller) the dataset is empty
         if num_of_images <= 0:
             # An empty dataset does not contain anything
-            self.labels = []
             self.indices = None
             self.images = None
             if self.labels_available:
-                self.labels = []
+                self.labels = np.zeros((2,0))
         else:
             # create an variable self.images which contains ''images'' of size (3,256,256)
             # which either contain only ones or zeros
-            ones = np.ones((num_of_images//2,3, 256, 256))
-            zeros = np.zeros((num_of_images//2,3, 256, 256))
-            self.images = np.concatenate((ones,zeros),axis=0)
+            ones = np.float32(np.ones((num_of_images//2,3, 256, 256)))
+            zeros = np.float32(np.zeros((num_of_images//2,3, 256, 256)))
+            self.images = np.float32(np.concatenate((ones,zeros),axis=0))
             np.random.shuffle(self.images)
             # In this simple case the indices are just the indices of the numpy array of the images
             # for more complex cases (e.g. if the images are directory entries) the indices should provide
@@ -36,7 +35,7 @@ class ExampleDataset(BaseDataset):
             if self.labels_available:
                 # In this case the labels should describe whether an inidividual image contains zeros or ones
                 # The label should be 1 if it conatins ones and 0 if it contains zeros
-                self.labels = [int(np.max(x)) for x in self.images]
+                self.labels = np.float32(np.expand_dims(np.array([int(np.max(x)) for x in self.images]),1))
 
     def __len__(self):
         return len(self.indices)
@@ -47,7 +46,7 @@ class ExampleDataset(BaseDataset):
         index = self.indices[idx]
         if self.labels_available:
             return (self.images[index],self.labels[index])
-        return self.images[index]
+        return np.astype(self.images[index],np.float32)
 
     def get_samples(self):
         return self.images 
@@ -66,7 +65,7 @@ class ExampleDataset(BaseDataset):
         sample = new_sample
         if self.labels_available:
             sample, label = new_sample
-            self.labels = np.append(self.labels, label)
+            self.labels = np.float32(np.expand_dims(np.append(self.labels, label),1))
         if self.images is None:
             self.images = np.expand_dims(sample, 0)
         else:

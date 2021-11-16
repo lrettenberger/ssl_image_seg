@@ -186,7 +186,6 @@ class RandAugCompose(Compose):
             ops = random.choices(self.augment_pool, k=self.n)
             for op, max_v, bias, kw in ops:
                 v = np.random.randint(1, self.m)
-                #print("v: " + str(v))
                 if random.random() < 0.5:
                     if kw is not None:
                         aug_list.append(op(v=v, max_v=max_v, bias=bias,**kw))
