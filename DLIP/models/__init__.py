@@ -1,3 +1,2 @@
-"""
-    Models to be used must be specified here to be loadable.
+""" If not stongly necessary the init file should be kept empty.
 """
