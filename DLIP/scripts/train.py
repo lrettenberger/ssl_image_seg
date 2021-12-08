@@ -16,7 +16,8 @@ from DLIP.utils.cross_validation.cv_trainer import CVTrainer
 logging.basicConfig(level=logging.INFO)
 logging.info("Initalizing model")
 
-config_files, result_dir = parse_arguments()
+args = parse_arguments()
+config_files, result_dir = args["config_files"], args["result_dir"]
 
 cfg_yaml = merge_configs(config_files)
 base_path=os.path.expandvars(result_dir)
@@ -38,7 +39,7 @@ config = initialize_wandb(
 seed_everything(seed=cfg_yaml['experiment.seed']['value'])
 parameters_splitted = split_parameters(config, ["model", "train", "data"])
 
-model = load_model(parameters_splitted["model"], checkpoint_path_str='/home/ws/nd6488/dl-image-processing-template/results/example-experiment/ExamplePLDatamodule/ExampleClassifier/0000/dnn_weights.ckpt')
+model = load_model(parameters_splitted["model"])
 data = load_data_module(parameters_splitted["data"])
 trainer = load_trainer(parameters_splitted['train'], experiment_dir, wandb.run.name, data)
 
