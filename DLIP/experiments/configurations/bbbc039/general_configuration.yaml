@@ -2,18 +2,17 @@
 #  This is done to avoid defining the same variables in multiple places.
 
 wandb.project_name:
-  value: example-project
+  value: insect-seed-detection
 # The w&b user or group the project should belong to.
 wandb.entity:
-  value: lrettenberger
+  value: marcelschilling
 wandb.notes:
-  value: This project has no purpose. This is just for demonstration.
+  value: Retrain on small dataset
 wandb.tags:
-  value: example, useless
+  value: null
 # Valid values: online/enabled, offline, disabled
 # online/enabled = default, runs in online mode. Both enabled and online can be used.
 # offline = runs in offline mode, writes all data to disk for later syncing to a server.
 # disabled = makes all calls to wandb api's noop's.
 wandb.mode:
   value: disabled
-

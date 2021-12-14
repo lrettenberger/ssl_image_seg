@@ -50,7 +50,7 @@ def load_data_module(data_params: dict,  do_val_init=True):
     datamodule = load_class(DATA_MODULE, datamodule_params["name"])
     # Create new dict with train_transforms and val_transforms
     # and merge it with the datamodule args.
-    if 'root_dirs' in data_params and 'device' in datamodule_params:
+    if 'root_dirs' in datamodule_params and 'device' in datamodule_params:
         datamodule_args['root_dir'] = datamodule_params["root_dirs"][datamodule_params["device"]]
     datamodule = datamodule(
         **{

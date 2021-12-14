@@ -3,17 +3,17 @@ import glob
 import os
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 
 from DLIP.data.base_classes.base_dataset import BaseDataset
 
 
-class BaseSegmentationDataset(BaseDataset):
+class BaseInstanceSegmentationDataset(BaseDataset):
     def __init__(
         self,
         root_dir: str,
-        map_look_up: dict,
         samples_dir: str = "samples",
-        class_dir: str = "labels",
+        labels_dir: str = "labels",
         samples_data_format="tif",
         labels_data_format="tif",
         transforms = None,
@@ -24,12 +24,11 @@ class BaseSegmentationDataset(BaseDataset):
         self.labels_available = labels_available
         self.root_dir = root_dir
         self.samples_dir = samples_dir
-        self.class_dir = class_dir
+        self.labels_dir = labels_dir
         self.samples_data_format = samples_data_format
         self.labels_data_format = labels_data_format
         self.return_trafos = return_trafos
         self.transforms = transforms
-        self.map_look_up = map_look_up
 
         if transforms is None:
                 self.transforms = lambda x, y: (x,y,0)
@@ -40,7 +39,7 @@ class BaseSegmentationDataset(BaseDataset):
 
 
         self.samples = os.path.join(self.root_dir,self.samples_dir)
-        self.labels  = os.path.join(self.root_dir,self.class_dir)
+        self.labels  = os.path.join(self.root_dir,self.labels_dir)
 
         # Get all sample names sorted as integer values
         all_samples_sorted = sorted(
@@ -66,19 +65,19 @@ class BaseSegmentationDataset(BaseDataset):
         # load sample
         sample_path = os.path.join(self.samples, f"{self.indices[idx]}.{self.samples_data_format}")
         sample_img = tifffile.imread(sample_path) if self.samples_data_format=="tif" else cv2.imread(sample_path,-1)
+        
+        if sample_img.ndim>2:
+            sample_img = sample_img[:,:,0]
 
         sample_img_lst = []
         label_lst = []
         trafo_lst = []
 
         if self.labels_available:
-            # load label map
-            label_path = os.path.join(self.labels, f"{self.indices[idx]}_label.{self.labels_data_format}")
+            label_path = os.path.join(self.labels, f"{self.indices[idx]}.{self.labels_data_format}")
             label_img = tifffile.imread(label_path) if self.labels_data_format=="tif" else cv2.imread(label_path,-1)
-
-            label_one_hot = np.zeros((label_img.shape[0],label_img.shape[1],len(self.map_look_up)), dtype=np.float32)
-            for key, value in self.map_look_up.items():
-                label_one_hot[label_img==value,key] = 1.0
+            label_one_hot = np.zeros((label_img.shape[0],label_img.shape[1],1), dtype=np.float32)
+            label_one_hot[:,:,0] = label_img
         else:
             label_one_hot = np.zeros((sample_img.shape))
 

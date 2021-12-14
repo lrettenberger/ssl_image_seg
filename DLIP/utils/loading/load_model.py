@@ -17,6 +17,8 @@ def load_model(model_params: dict, checkpoint_path_str = None):
         loss_fcn = model_params['loss_fcn']
         loss_class_local, score_local = load_class(OBJECTIVES_MODULE, loss_fcn, return_score=True)
         loss_class_torch, score_torch = load_class(TORCH_OBJECTIVE_MODULE, loss_fcn, return_score=True)
+        score_local = score_local if score_local is not None else 0.0 
+        score_torch = score_torch if score_torch is not None else 0.0 
         loss_class = loss_class_local if score_local > score_torch else loss_class_torch
         if loss_class is None:
             raise ModuleNotFoundError(f'Cant find class loss function {model_params["loss_fcn"]}.')
