@@ -12,7 +12,6 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
     def __init__(
         self,
         root_dir: str,
-        n_classes: int,
         batch_size = 1,
         dataset_size = 1.0,
         val_to_train_ratio = 0,
@@ -27,7 +26,8 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
         shuffle=True,
         drop_last=False,
         samples_dir: str = "samples",
-        labels_dir: str = "labels_dist_map"
+        labels_dir: str = "labels",
+        labels_dmap_dir: str = "labels_dist_map"
     ):
         super().__init__(
             dataset_size=dataset_size,
@@ -47,6 +47,7 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
         self.root_dir = root_dir
         self.samples_dir = samples_dir
         self.labels_dir = labels_dir
+        self.labels_dmap_dir = labels_dmap_dir
 
         self.train_labeled_root_dir     = os.path.join(self.root_dir, "train")
         if simulated_dataset:
@@ -67,8 +68,7 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
         self.unlabeled_train_dataset: BaseInstanceSegmentationDataset = None
         self.val_dataset: BaseInstanceSegmentationDataset = None
         self.test_dataset: BaseInstanceSegmentationDataset = None
-        self.n_classes = n_classes
-        self.samples_data_format, self.labels_data_format = self._determine_data_format()
+        self.samples_data_format, self.labels_data_format, self.labels_dmap_data_format = self._determine_data_format()
         self.__init_datasets()
 
     def __init_datasets(self):
@@ -77,8 +77,10 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             transforms=self.train_transforms,
             samples_dir=self.samples_dir,
             labels_dir=self.labels_dir,
+            labels_dmap_dir=self.labels_dmap_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
+            labels_dmap_data_format=self.labels_dmap_data_format
         )
 
         for _ in range(int(len(self.labeled_train_dataset) * (1 - self.dataset_size))):
@@ -90,8 +92,10 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             empty_dataset=True,
             samples_dir=self.samples_dir,
             labels_dir=self.labels_dir,
+            labels_dmap_dir=self.labels_dmap_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
+            labels_dmap_data_format=self.labels_dmap_data_format
         )
 
         self.unlabeled_train_dataset = BaseInstanceSegmentationDataset(
@@ -100,9 +104,11 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             labels_available=False,
             samples_dir=self.samples_dir,
             labels_dir=self.labels_dir,
+            labels_dmap_dir=self.labels_dmap_dir,
             return_trafos=self.return_unlabeled_trafos,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
+            labels_dmap_data_format=self.labels_dmap_data_format
         )
         
         self.test_dataset = BaseInstanceSegmentationDataset(
@@ -110,12 +116,14 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             transforms=self.test_transforms,
             samples_dir=self.samples_dir,
             labels_dir=self.labels_dir,
+            labels_dmap_dir=self.labels_dmap_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
+            labels_dmap_data_format=self.labels_dmap_data_format
         )
 
     def _determine_data_format(self):
-        extensions = {self.samples_dir: list(), self.labels_dir: list()}
+        extensions = {self.samples_dir: list(), self.labels_dir: list(), self.labels_dmap_dir: list()}
 
         for folder in extensions.keys():
             for file in os.listdir(os.path.join(self.train_labeled_root_dir,folder)):
@@ -124,4 +132,6 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             for file in os.listdir(os.path.join(self.train_unlabeled_root_dir,folder)):
                 extensions[folder].append(os.path.splitext(file)[1].replace(".", ""))
 
-        return max(set(extensions[self.samples_dir]), key = extensions[self.samples_dir].count),max(set(extensions[self.labels_dir]), key = extensions[self.labels_dir].count)
+        return max(set(extensions[self.samples_dir]), key = extensions[self.samples_dir].count),\
+               max(set(extensions[self.labels_dir]), key = extensions[self.labels_dir].count), \
+               max(set(extensions[self.labels_dmap_dir]), key = extensions[self.labels_dmap_dir].count) 

@@ -5,7 +5,7 @@ from pytorch_lightning import Callback, LightningModule, Trainer
 from torch import Tensor
 
 
-class ImageLogCallback(Callback):
+class ImageLogSegCallback(Callback):
     """
     Logs one batch of validation dataset.
     """
