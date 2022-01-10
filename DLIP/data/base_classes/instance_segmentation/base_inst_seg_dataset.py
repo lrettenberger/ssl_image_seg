@@ -14,8 +14,10 @@ class BaseInstanceSegmentationDataset(BaseDataset):
         root_dir: str,
         samples_dir: str = "samples",
         labels_dir: str = "labels",
+        labels_dmap_dir: str = "labels_dist_map",
         samples_data_format="tif",
         labels_data_format="tif",
+        labels_dmap_data_format="tif",
         transforms = None,
         empty_dataset=False,
         labels_available=True,
@@ -25,8 +27,10 @@ class BaseInstanceSegmentationDataset(BaseDataset):
         self.root_dir = root_dir
         self.samples_dir = samples_dir
         self.labels_dir = labels_dir
+        self.labels_dmap_dir = labels_dmap_dir
         self.samples_data_format = samples_data_format
         self.labels_data_format = labels_data_format
+        self.labels_dmap_data_format = labels_dmap_data_format
         self.return_trafos = return_trafos
         self.transforms = transforms
 
@@ -40,6 +44,7 @@ class BaseInstanceSegmentationDataset(BaseDataset):
 
         self.samples = os.path.join(self.root_dir,self.samples_dir)
         self.labels  = os.path.join(self.root_dir,self.labels_dir)
+        self.labels_dmap  = os.path.join(self.root_dir,self.labels_dmap_dir)
 
         # Get all sample names sorted as integer values
         all_samples_sorted = sorted(
@@ -57,6 +62,8 @@ class BaseInstanceSegmentationDataset(BaseDataset):
                 for i in all_samples_sorted
             ]
         self.raw_mode = False
+        self.label_raw_mode = False
+
 
     def __len__(self):
         return len(self.indices)
@@ -74,8 +81,12 @@ class BaseInstanceSegmentationDataset(BaseDataset):
         trafo_lst = []
 
         if self.labels_available:
-            label_path = os.path.join(self.labels, f"{self.indices[idx]}.{self.labels_data_format}")
-            label_img = tifffile.imread(label_path) if self.labels_data_format=="tif" else cv2.imread(label_path,-1)
+            if self.label_raw_mode:
+                label_path = os.path.join(self.labels, f"{self.indices[idx]}.{self.labels_data_format}")
+                label_img = tifffile.imread(label_path) if self.labels_data_format=="tif" else cv2.imread(label_path,-1)
+            else:
+                label_path = os.path.join(self.labels_dmap, f"{self.indices[idx]}.{self.labels_dmap_data_format}")
+                label_img = tifffile.imread(label_path) if self.labels_dmap_data_format=="tif" else cv2.imread(label_path,-1)
             label_one_hot = np.zeros((label_img.shape[0],label_img.shape[1],1), dtype=np.float32)
             label_one_hot[:,:,0] = label_img
         else:

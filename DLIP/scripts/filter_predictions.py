@@ -36,10 +36,13 @@ def get_nucleus_ids(img):
 
 
 class InstSegProcessor:
-    def __init__(self) -> None:
+    def __init__(self,
+        th_cell=0.09,
+        th_seed=0.49
+    ) -> None:
         self.sigma_cell = 1.0
-        self.th_cell    = 0.09
-        self.th_seed    = 0.49
+        self.th_cell    = th_cell
+        self.th_seed    = th_seed
         self.do_splitting = True
         self.do_area_based_filtering = True
         self.do_fill_holes = True

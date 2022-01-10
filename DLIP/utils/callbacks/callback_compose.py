@@ -1,10 +1,14 @@
+from matplotlib.pyplot import imshow
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
 
 from DLIP.utils.callbacks.epoch_duration_log import EpochDurationLogCallback
-from DLIP.utils.callbacks.image_log import ImageLogCallback
+from DLIP.utils.callbacks.image_seg_log import ImageLogSegCallback
+from DLIP.utils.callbacks.image_inst_seg_log import ImageLogInstSegCallback
 from DLIP.utils.callbacks.log_best_metric import LogBestMetricsCallback
-
+from DLIP.utils.callbacks.log_instance_seg_metrics import LogInstSegMetricsCallback
+from DLIP.utils.loading.split_parameters import split_parameters
+from DLIP.utils.loading.dict_to_config import dict_to_config
 
 class CallbackCompose:
     def __init__(
@@ -16,7 +20,6 @@ class CallbackCompose:
         self.callback_lst = None
         self.data = data
         self.make_composition()
-
 
     def make_composition(self):
         self.callback_lst = []
@@ -43,9 +46,15 @@ class CallbackCompose:
                 )
             )
 
-        if hasattr(self.params, 'img_log_enabled')  and self.params.img_log_enabled:
+        if hasattr(self.params, 'img_seg_log_enabled')  and self.params.img_log_enabled:
             self.callback_lst.append(
-                ImageLogCallback()
+                ImageLogSegCallback()
+            )
+
+        if hasattr(self.params, 'img_log_inst_seg_enabled')  and self.params.img_log_inst_seg_enabled:
+            inst_seg_pp_params = split_parameters(dict_to_config(vars(self.params)), ["inst_seg_pp"])["inst_seg_pp"]
+            self.callback_lst.append(
+                ImageLogInstSegCallback(inst_seg_pp_params)
             )
 
         if hasattr(self.params, 'best_metrics_log_enabled') and self.params.best_metrics_log_enabled:
@@ -58,6 +67,12 @@ class CallbackCompose:
         if hasattr(self.params, 'epoch_duration_enabled') and self.params.epoch_duration_enabled:
             self.callback_lst.append(
                 EpochDurationLogCallback()
+            )
+        
+        if hasattr(self.params, 'inst_seg_metrics_log_enabled') and self.params.inst_seg_metrics_log_enabled:
+            inst_seg_pp_params = split_parameters(dict_to_config(vars(self.params)), ["inst_seg_pp"])["inst_seg_pp"]
+            self.callback_lst.append(
+                LogInstSegMetricsCallback(inst_seg_pp_params)
             )
 
     def get_composition(self):
