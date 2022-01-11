@@ -1,12 +1,8 @@
 import os
 import random
-import tifffile
-import cv2
-import numpy as np
 
 from DLIP.data.base_classes.base_pl_datamodule import BasePLDataModule
 from DLIP.data.base_classes.instance_segmentation.base_inst_seg_dataset import BaseInstanceSegmentationDataset
-
 
 class BaseInstanceSegmentationDataModule(BasePLDataModule):
     def __init__(
@@ -27,7 +23,10 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
         drop_last=False,
         samples_dir: str = "samples",
         labels_dir: str = "labels",
-        labels_dmap_dir: str = "labels_dist_map"
+        labels_dmap_dir: str = "labels_dist_map",
+        label_suffix="_label",
+        label_prefix="",
+        **kwargs
     ):
         super().__init__(
             dataset_size=dataset_size,
@@ -40,9 +39,9 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             initial_labeled_ratio = initial_labeled_ratio,
         )
         if self.initial_labeled_ratio>=0:
-            simulated_dataset = True
+            self.simulated_dataset = True
         else:
-            simulated_dataset = False
+            self.simulated_dataset = False
 
         self.root_dir = root_dir
         self.samples_dir = samples_dir
@@ -50,7 +49,7 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
         self.labels_dmap_dir = labels_dmap_dir
 
         self.train_labeled_root_dir     = os.path.join(self.root_dir, "train")
-        if simulated_dataset:
+        if self.simulated_dataset:
             self.train_unlabeled_root_dir   = os.path.join(self.root_dir, "train")
         else:
             self.train_unlabeled_root_dir   = os.path.join(self.root_dir,  "unlabeled")
@@ -69,9 +68,13 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
         self.val_dataset: BaseInstanceSegmentationDataset = None
         self.test_dataset: BaseInstanceSegmentationDataset = None
         self.samples_data_format, self.labels_data_format, self.labels_dmap_data_format = self._determine_data_format()
-        self.__init_datasets()
+        self.label_suffix = label_suffix
+        self.label_prefix = label_prefix
+        self._init_datasets()
+        if self.simulated_dataset:
+            self.assign_labeled_unlabeled_split()
 
-    def __init_datasets(self):
+    def _init_datasets(self):
         self.labeled_train_dataset = BaseInstanceSegmentationDataset(
             root_dir=self.train_labeled_root_dir, 
             transforms=self.train_transforms,
@@ -80,7 +83,9 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             labels_dmap_dir=self.labels_dmap_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            labels_dmap_data_format=self.labels_dmap_data_format
+            labels_dmap_data_format=self.labels_dmap_data_format,
+            label_suffix=self.label_suffix,
+            label_prefix=self.label_prefix
         )
 
         for _ in range(int(len(self.labeled_train_dataset) * (1 - self.dataset_size))):
@@ -95,20 +100,25 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             labels_dmap_dir=self.labels_dmap_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            labels_dmap_data_format=self.labels_dmap_data_format
+            labels_dmap_data_format=self.labels_dmap_data_format,
+            label_suffix=self.label_suffix,
+            label_prefix=self.label_prefix
         )
 
         self.unlabeled_train_dataset = BaseInstanceSegmentationDataset(
             root_dir=self.train_unlabeled_root_dir,
             transforms=self.train_transforms,
             labels_available=False,
+            empty_dataset=True if self.simulated_dataset else False,
             samples_dir=self.samples_dir,
             labels_dir=self.labels_dir,
             labels_dmap_dir=self.labels_dmap_dir,
             return_trafos=self.return_unlabeled_trafos,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            labels_dmap_data_format=self.labels_dmap_data_format
+            labels_dmap_data_format=self.labels_dmap_data_format,
+            label_suffix=self.label_suffix,
+            label_prefix=self.label_prefix
         )
         
         self.test_dataset = BaseInstanceSegmentationDataset(
@@ -119,7 +129,9 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             labels_dmap_dir=self.labels_dmap_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            labels_dmap_data_format=self.labels_dmap_data_format
+            labels_dmap_data_format=self.labels_dmap_data_format,
+            label_suffix=self.label_suffix,
+            label_prefix=self.label_prefix
         )
 
     def _determine_data_format(self):
