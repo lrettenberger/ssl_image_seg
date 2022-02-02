@@ -14,9 +14,11 @@ class UnetDecoder(nn.Module):
         encoder_filters: List = [1024, 512, 256, 128, 64],
         decoder_filters: List = [512, 256, 128, 64],
         dropout=0.0,
-        billinear_downsampling_used = False
+        billinear_downsampling_used = False,
+        ae_mode = False
     ):
         super().__init__()
+        self.ae_mode = ae_mode
         #  We need the filters in reversed order
         encoder_filters = encoder_filters[::-1]
         self.n_classes = n_classes
@@ -32,7 +34,7 @@ class UnetDecoder(nn.Module):
 
         self.decoder = ModuleList()
         for in_ch, skip_ch, out_ch in zip(in_filters, skip_filters, out_filters):
-            skip_ch = 0 if skip_ch == None else skip_ch
+            skip_ch = 0 if (skip_ch == None or ae_mode) else skip_ch
             self.decoder.append(
                 Up(
                     in_ch,
@@ -47,7 +49,10 @@ class UnetDecoder(nn.Module):
     def forward(self, x):
         up_value, skip_connections = x
         for i in range(0, len(self.decoder) - 1):
-            up_value = self.decoder[i](up_value, skip_connections[i])
+            if self.ae_mode:
+                up_value = self.decoder[i](up_value, None)
+            else:
+                up_value = self.decoder[i](up_value, skip_connections[i])
         logits = self.decoder[-1](up_value)
         return logits
 

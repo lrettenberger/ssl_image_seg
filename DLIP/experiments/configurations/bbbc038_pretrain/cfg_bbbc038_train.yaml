@@ -6,7 +6,7 @@ experiment.seed:
 
 # Model Configuration
 model.name:
-  value: UnetInstSegSupervised
+  value: SResUnet
 model.params.input_height:
   value: 128
 model.params.in_channels:
@@ -14,15 +14,15 @@ model.params.in_channels:
 model.params.out_channels:
   value: 1
 model.params.ae_mode:
-  value: false
+  value: true
 model.loss_fcn:
-  value: SmoothL1Loss
+  value: MSELoss
 
 # Optimizer
 model.optimizer.type:
   value: Adam
 model.optimizer.params.lr:
-  value: 0.001
+  value: 0.0001
 # LR Scheduler
 model.optimizer.lrs.type:
   value: ReduceLROnPlateau
