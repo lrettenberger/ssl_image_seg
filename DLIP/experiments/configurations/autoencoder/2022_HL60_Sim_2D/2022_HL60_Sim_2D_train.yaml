@@ -6,15 +6,17 @@ experiment.seed:
 
 # Model Configuration
 model.name:
-  value: BoltsAE
+  value: SResUnet
 model.params.input_height:
-  value: 256
+  value: 512
 model.params.in_channels:
   value: 1
 model.params.out_channels:
   value: 1
 model.params.ae_mode:
   value: true
+model.params.imagenet_pretraing:
+  value: false
 model.loss_fcn:
   value: MSELoss
 
@@ -22,7 +24,7 @@ model.loss_fcn:
 model.optimizer.type:
   value: Adam
 model.optimizer.params.lr:
-  value: 0.0001
+  value: 0.0005
 # LR Scheduler
 model.optimizer.lrs.type:
   value: ReduceLROnPlateau
@@ -62,7 +64,7 @@ data.datamodule.arguments.dataset_size:
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
-  value: 16
+  value: 8
 data.datamodule.arguments.num_workers:
   value: 32
 data.datamodule.arguments.label_suffix:
@@ -90,11 +92,28 @@ data.img_processing.img_type:
 data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:
-  value: [256,256]
+  value: [565,807]
+
 
 # Augmentations
 data.img_processing.aug1.replay_processing_pipeline:
   value: false
+
+# Random Crop -> No resize to not disort the form
+data.img_processing.aug1.random_crop_crop_enabled:
+  value: true
+data.img_processing.aug1.random_crop_size:
+  value: [512, 512]
+data.img_processing.aug1.random_crop_probability:
+  value: 1.0
+
+# Val = Center crop -> Always the same
+data.img_processing.validation_aug.center_crop_crop_enabled:
+  value: true
+data.img_processing.validation_aug.center_crop_size:
+  value: [512, 512]
+data.img_processing.validation_aug.center_crop_probability:
+  value: 1.0
 
 # # Flip
 # data.img_processing.aug1.aug_flip_prob:

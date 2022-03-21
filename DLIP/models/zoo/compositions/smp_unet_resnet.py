@@ -127,8 +127,35 @@ class UnetDecoderAE(nn.Module):
 
 class SmpUnetResnet(smp.Unet, pl.LightningModule):
 
-    def __init__(self, loss_fcn: nn.Module, encoder_name: str = "resnet18", encoder_depth: int = 5, encoder_weights = "imagenet", decoder_use_batchnorm: bool = True, decoder_channels = (256, 128, 64, 32, 16), decoder_attention_type  = None, in_channels: int = 3, out_channels: int = 3, activation = None, aux_params = None, input_height=None, ae_mode=False):
-        super(SmpUnetResnet, self).__init__(encoder_name=encoder_name, encoder_depth=encoder_depth, encoder_weights=encoder_weights, decoder_use_batchnorm=decoder_use_batchnorm, decoder_channels=decoder_channels, decoder_attention_type=decoder_attention_type, in_channels=in_channels, classes=out_channels, activation=activation, aux_params=aux_params)
+    def __init__(
+        self,
+        loss_fcn: nn.Module,
+        encoder_name: str = "resnet50",
+        encoder_depth: int = 5,
+        decoder_use_batchnorm: bool = True,
+        #decoder_channels = (256, 128, 64, 32, 16),
+        decoder_channels = (512,256,128,64,32),
+        decoder_attention_type  = None,
+        in_channels: int = 3,
+        out_channels: int = 3,
+        activation = None,
+        aux_params = None,
+        input_height=None,
+        ae_mode=False,
+        imagenet_pretraing=True
+    ):
+        super(SmpUnetResnet, self).__init__(
+            encoder_name=encoder_name,
+            encoder_depth=encoder_depth,
+            encoder_weights="imagenet" if imagenet_pretraing else None, 
+            decoder_use_batchnorm=decoder_use_batchnorm,
+            decoder_channels=decoder_channels,
+            decoder_attention_type=decoder_attention_type,
+            in_channels=in_channels,
+            classes=out_channels,
+            activation=activation,
+            aux_params=aux_params
+        )
         self.loss_fcn = loss_fcn
         self.ae_mode = ae_mode
         if ae_mode:

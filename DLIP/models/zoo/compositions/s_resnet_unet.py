@@ -2,7 +2,7 @@ import torch
 import wandb
 import pytorch_lightning as pl
 import torch.nn as nn
-from torchvision.models import resnet18
+from torchvision.models import resnet50
 
 from DLIP.models.zoo.building_blocks.double_conv import DoubleConv
 
@@ -17,11 +17,18 @@ class SResUnet(pl.LightningModule):
     """Shallow Unet with ResNet18 or ResNet34 encoder.
     """
 
-    def __init__(self, loss_fcn: nn.Module, in_channels: int = 3, out_channels=2,input_height=None,ae_mode=False):
+    def __init__(
+        self, loss_fcn: nn.Module,
+        in_channels: int = 3,
+        out_channels=2,
+        input_height=None,
+        ae_mode=False,
+        imagenet_pretraing=True
+    ):
         super().__init__()
         self.loss_fcn = loss_fcn
         self.ae_mode = ae_mode
-        self.encoder = resnet18(pretrained=True)
+        self.encoder = resnet50(pretrained=imagenet_pretraing)
         if in_channels != 3:
             self.encoder.conv1 = nn.Conv2d(in_channels, 64, kernel_size=7, stride=2, padding=3,bias=False)
         self.encoder_layers = list(self.encoder.children())
@@ -32,7 +39,7 @@ class SResUnet(pl.LightningModule):
         self.block4 = self.encoder_layers[6]
         self.block5 = self.encoder_layers[7]
 
-        self.up_conv6 = up_conv(512, 512)
+        self.up_conv6 = up_conv(2048, 512)
         self.conv6 = DoubleConv(512 + (256 if not self.ae_mode else 0), 512)
         self.up_conv7 = up_conv(512, 256)
         self.conv7 = DoubleConv(256 + (128 if not self.ae_mode else 0), 256)
