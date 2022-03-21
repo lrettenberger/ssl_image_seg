@@ -22,6 +22,7 @@ class BaseInstanceSegmentationDataset(BaseDataset):
         empty_dataset=False,
         labels_available=True,
         return_trafos=False,
+        label_suffix = ''
     ):
         self.labels_available = labels_available
         self.root_dir = root_dir
@@ -64,6 +65,8 @@ class BaseInstanceSegmentationDataset(BaseDataset):
         self.raw_mode = False
         self.label_raw_mode = False
 
+        self.label_suffix = label_suffix
+
 
     def __len__(self):
         return len(self.indices)
@@ -82,10 +85,10 @@ class BaseInstanceSegmentationDataset(BaseDataset):
 
         if self.labels_available:
             if self.label_raw_mode:
-                label_path = os.path.join(self.labels, f"{self.indices[idx]}.{self.labels_data_format}")
+                label_path = os.path.join(self.labels_dmap, f"{self.indices[idx]}{self.label_suffix}.{self.labels_dmap_data_format}")
                 label_img = tifffile.imread(label_path) if self.labels_data_format=="tif" else cv2.imread(label_path,-1)
             else:
-                label_path = os.path.join(self.labels_dmap, f"{self.indices[idx]}.{self.labels_dmap_data_format}")
+                label_path = os.path.join(self.labels_dmap, f"{self.indices[idx]}{self.label_suffix}.{self.labels_dmap_data_format}")
                 label_img = tifffile.imread(label_path) if self.labels_dmap_data_format=="tif" else cv2.imread(label_path,-1)
             label_one_hot = np.zeros((label_img.shape[0],label_img.shape[1],1), dtype=np.float32)
             label_one_hot[:,:,0] = label_img

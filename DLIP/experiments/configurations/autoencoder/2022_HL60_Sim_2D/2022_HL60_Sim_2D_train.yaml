@@ -6,9 +6,9 @@ experiment.seed:
 
 # Model Configuration
 model.name:
-  value: SResUnet
+  value: BoltsAE
 model.params.input_height:
-  value: 128
+  value: 256
 model.params.in_channels:
   value: 1
 model.params.out_channels:
@@ -53,7 +53,7 @@ data.datamodule.name:
   value: BaseInstanceSegmentationDataModule
 data.datamodule.root_dirs:
   value: 
-    local: /home/ws/kg2371/datasets/BBBC038_clean/
+    local: /home/ws/kg2371/lsdf/Daten_Schilling/datasets/2022_HL60_Sim_2D
     iai_gpu: 
 data.datamodule.device:
   value: local
@@ -62,30 +62,15 @@ data.datamodule.arguments.dataset_size:
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
-  value: 8
+  value: 16
 data.datamodule.arguments.num_workers:
-  value: 4
-
-# data.datamodule.name:
-#   value: IsicDermoDataModule
-# data.datamodule.root_dirs:
-#   value: 
-#     local: /home/ws/kg2371/lsdf/Daten_Schilling/datasets/2017_ISIC_Derma
-#     iai_gpu: 
-# data.datamodule.device:
-#   value: 
-#     local
-# data.datamodule.arguments.initial_labeled_ratio:
-#   value: 1.0
-# data.datamodule.arguments.val_to_train_ratio:
-#   value: 0.2
-# data.datamodule.arguments.batch_size:
-#   value: 64
-
+  value: 32
+data.datamodule.arguments.label_suffix:
+  value: '_label'
 
 # Callbacks Configuration
 train.callbacks.save_k_top_models:
-  value: 0
+  value: 1
 train.callbacks.early_stopping_enabled:
   value: false
 train.callbacks.early_stopping_patience:
@@ -96,41 +81,16 @@ train.callbacks.log_best_metric_dict:
   value: {"val/loss":"min"}
 train.callbacks.epoch_duration_enabled:
   value: true
-train.callbacks.img_log_inst_seg_enabled:
-  value: true
-train.callbacks.inst_seg_metrics_log_enabled:
-  value: true
-train.callbacks.inst_seg_pp.th_cell:
-  value: 0.09
-train.callbacks.inst_seg_pp.th_seed:
-  value: 0.49
-train.callbacks.inst_seg_pp.sigma_cell:
-  value: 1.00
-train.callbacks.inst_seg_pp.do_splitting:
-  value: true
-train.callbacks.inst_seg_pp.do_area_based_filtering:
-  value: true
-train.callbacks.inst_seg_pp.do_fill_holes:
-  value: true
-train.callbacks.inst_seg_pp.valid_area_median_factors:
-  value: [0.25,3]
 
 # General Augmentations
 data.img_processing.norm_type:
   value: per_image
-# 14.340732122232392
-data.img_processing.img_norm_mean:
-  value: 0.0568
-# # 8.703025475948534
-data.img_processing.img_norm_std:
-  value: 0.0759
-  
 data.img_processing.img_type:
-  value: mono_8_bit
+  value: mono_16_bit
 data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:
-  value: [128,128]
+  value: [256,256]
 
 # Augmentations
 data.img_processing.aug1.replay_processing_pipeline:
