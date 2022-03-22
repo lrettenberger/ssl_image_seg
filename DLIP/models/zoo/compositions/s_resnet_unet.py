@@ -23,7 +23,8 @@ class SResUnet(pl.LightningModule):
         out_channels=2,
         input_height=None,
         ae_mode=False,
-        imagenet_pretraing=True
+        imagenet_pretraing=True,
+        **kwargs
     ):
         super().__init__()
         self.loss_fcn = loss_fcn

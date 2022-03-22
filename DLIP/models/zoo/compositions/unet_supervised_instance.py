@@ -5,6 +5,7 @@ import torch.nn as nn
 
 from DLIP.models.zoo.compositions.base_composition import BaseComposition
 from DLIP.models.zoo.decoder.unet_decoder import UnetDecoder
+from DLIP.models.zoo.encoder.resnet_encoder import ResNetEncoder
 from DLIP.models.zoo.encoder.unet_encoder import UnetEncoder
 
 
@@ -15,25 +16,41 @@ class UnetInstSegSupervised(BaseComposition):
         in_channels: int,
         out_channels: int,
         loss_fcn: nn.Module,
+        encoder_type = 'UNet',
+        # encoder filters is not used if resnet is used as encoder
         encoder_filters: List = [64, 128, 256, 512, 1024],
         decoder_filters: List = [512, 256, 128, 64],
         dropout: float = 0.0,
         ae_mode = False,
+        pretraining_weights = 'imagenet',
+        encoder_frozen=False,
         **kwargs,
     ):
         super().__init__()
         self.loss_fcn = loss_fcn
         self.ae_mode = ae_mode
         bilinear = False
-        self.append(UnetEncoder(
-            input_channels = in_channels,
-            encoder_filters = encoder_filters,
-            dropout=dropout,
-            bilinear=bilinear
-        ))
+        encoder_type = encoder_type.lower()
+        if encoder_type == 'unet':
+            encoder = UnetEncoder(
+                input_channels = in_channels,
+                encoder_type = encoder_type,
+                encoder_filters = encoder_filters,
+                dropout=dropout,
+                bilinear=bilinear
+            )
+        if 'resnet' in encoder_type:
+            encoder = ResNetEncoder(
+                input_channels = in_channels,
+                encoder_type = encoder_type,
+                pretraining_weights=pretraining_weights,
+                encoder_frozen=encoder_frozen
+            )
+
+        self.append(encoder)
         self.append(UnetDecoder(
             n_classes = out_channels,
-            encoder_filters = encoder_filters,
+            encoder_filters = encoder.get_skip_channels(),
             decoder_filters = decoder_filters,
             dropout=dropout,
             billinear_downsampling_used = bilinear,
