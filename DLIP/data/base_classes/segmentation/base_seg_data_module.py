@@ -25,7 +25,13 @@ class BaseSegmentationDataModule(BasePLDataModule):
         num_workers=0,
         pin_memory=False,
         shuffle=True,
-        drop_last=False
+        drop_last=False,
+        map_look_up=None,
+        label_suffix="_label",
+        label_prefix="",
+        samples_dir: str = "samples",
+        labels_dir: str = "labels",
+        **kwargs
     ):
         super().__init__(
             dataset_size=dataset_size,
@@ -37,10 +43,22 @@ class BaseSegmentationDataModule(BasePLDataModule):
             drop_last = drop_last,
             initial_labeled_ratio = initial_labeled_ratio,
         )
+        if self.initial_labeled_ratio>=0:
+            self.simulated_dataset = True
+        else:
+            self.simulated_dataset = False
+
         self.root_dir = root_dir
+        self.samples_dir = samples_dir
+        self.labels_dir = labels_dir
+
         self.train_labeled_root_dir     = os.path.join(self.root_dir, "train")
-        self.train_unlabeled_root_dir   = os.path.join(self.root_dir, "unlabeled")
+        if self.simulated_dataset:
+            self.train_unlabeled_root_dir   = os.path.join(self.root_dir, "train")
+        else:
+            self.train_unlabeled_root_dir   = os.path.join(self.root_dir,  "unlabeled")
         self.test_labeled_root_dir      = os.path.join(self.root_dir, "test")
+
         self.train_transforms = train_transforms
         self.train_transforms_unlabeled = (
             train_transforms_unlabeled
@@ -56,16 +74,24 @@ class BaseSegmentationDataModule(BasePLDataModule):
         self.test_dataset: BaseSegmentationDataset = None
         self.n_classes = n_classes
         self.samples_data_format, self.labels_data_format = self._determine_data_format()
-        self.map_look_up = self._determine_label_maps()
-        self.__init_datasets()
+        self.map_look_up = self._determine_label_maps() if map_look_up is None else map_look_up
+        self.label_suffix = label_suffix
+        self.label_prefix = label_prefix
+        self._init_datasets()
+        if self.simulated_dataset:
+            self.assign_labeled_unlabeled_split()
 
-    def __init_datasets(self):
+    def _init_datasets(self):
         self.labeled_train_dataset = BaseSegmentationDataset(
             root_dir=self.train_labeled_root_dir, 
             transforms=self.train_transforms,
+            samples_dir=self.samples_dir,
+            labels_dir=self.labels_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            map_look_up=self.map_look_up
+            map_look_up=self.map_look_up,
+            label_suffix=self.label_suffix,
+            label_prefix=self.label_prefix
         )
 
         for _ in range(int(len(self.labeled_train_dataset) * (1 - self.dataset_size))):
@@ -75,27 +101,40 @@ class BaseSegmentationDataModule(BasePLDataModule):
             root_dir=self.train_labeled_root_dir, 
             transforms=self.val_transforms,
             empty_dataset=True,
+            samples_dir=self.samples_dir,
+            labels_dir=self.labels_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            map_look_up=self.map_look_up
+            map_look_up=self.map_look_up,
+            label_suffix=self.label_suffix,
+            label_prefix=self.label_prefix
         )
 
         self.unlabeled_train_dataset = BaseSegmentationDataset(
             root_dir=self.train_unlabeled_root_dir,
             transforms=self.train_transforms,
             labels_available=False,
+            samples_dir=self.samples_dir,
+            labels_dir=self.labels_dir,
+            empty_dataset=True if self.simulated_dataset else False,
             return_trafos=self.return_unlabeled_trafos,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            map_look_up=self.map_look_up
+            map_look_up=self.map_look_up,
+            label_suffix=self.label_suffix,
+            label_prefix=self.label_prefix
         )
         
         self.test_dataset = BaseSegmentationDataset(
             root_dir=self.test_labeled_root_dir, 
             transforms=self.test_transforms,
+            samples_dir=self.samples_dir,
+            labels_dir=self.labels_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            map_look_up=self.map_look_up
+            map_look_up=self.map_look_up,
+            label_suffix=self.label_suffix,
+            label_prefix=self.label_prefix
         )
 
     def _determine_data_format(self):
@@ -114,17 +153,28 @@ class BaseSegmentationDataModule(BasePLDataModule):
     def _determine_label_maps(self):
         map_lst = list()
         for file in os.listdir(os.path.join(self.train_labeled_root_dir,"labels")):
-            file_path = os.path.join(self.train_labeled_root_dir,"labels", file)
+            file_path = os.path.join(os.path.join(self.train_labeled_root_dir,"labels"), file)
             label_img = tifffile.imread(file_path) if self.labels_data_format=="tif" else cv2.imread(file_path,-1)
             map_lst.extend(np.unique(label_img))
 
+        for file in os.listdir(os.path.join(self.train_unlabeled_root_dir,"labels")):
+            file_path = os.path.join(os.path.join(self.train_labeled_root_dir,"labels"), file)
+            label_img = tifffile.imread(file_path) if self.labels_data_format=="tif" else cv2.imread(file_path,-1)
+            map_lst.extend(np.unique(label_img))
+            
         map_lst = sorted(map_lst)
 
         map_look_up = dict()
         if self.n_classes>1:
             for i in range(self.n_classes):
-                map_look_up[i]= map_lst[i]
+                if len(map_look_up)!=len(map_lst):
+                    map_look_up[i]= None
+                else:
+                    map_look_up[i]= map_lst[i]
         else:
-            map_look_up[0]= map_lst[-1]
+            if len(map_look_up)==0:
+                map_look_up[0] = None
+            else:
+                map_look_up[0]= map_lst[-1]
 
         return map_look_up

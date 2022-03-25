@@ -13,23 +13,27 @@ class BaseSegmentationDataset(BaseDataset):
         root_dir: str,
         map_look_up: dict,
         samples_dir: str = "samples",
-        class_dir: str = "labels",
+        labels_dir: str = "labels",
         samples_data_format="tif",
         labels_data_format="tif",
         transforms = None,
         empty_dataset=False,
         labels_available=True,
         return_trafos=False,
+        label_suffix="_label",
+        label_prefix=""
     ):
         self.labels_available = labels_available
         self.root_dir = root_dir
         self.samples_dir = samples_dir
-        self.class_dir = class_dir
+        self.labels_dir = labels_dir
         self.samples_data_format = samples_data_format
         self.labels_data_format = labels_data_format
         self.return_trafos = return_trafos
         self.transforms = transforms
         self.map_look_up = map_look_up
+        self.label_suffix=label_suffix
+        self.label_prefix=label_prefix
 
         if transforms is None:
                 self.transforms = lambda x, y: (x,y,0)
@@ -40,11 +44,11 @@ class BaseSegmentationDataset(BaseDataset):
 
 
         self.samples = os.path.join(self.root_dir,self.samples_dir)
-        self.labels  = os.path.join(self.root_dir,self.class_dir)
+        self.labels  = os.path.join(self.root_dir,self.labels_dir)
 
         # Get all sample names sorted as integer values
         all_samples_sorted = sorted(
-            glob.glob(f"{self.samples}{os.path.sep}*"),
+            glob.glob(f"{self.samples}{os.path.sep}*.{samples_data_format}"),
             key=lambda x: 
                 x.split(f"{self.samples}{os.path.sep}")[1].split(
                     f".{samples_data_format}"
@@ -73,9 +77,8 @@ class BaseSegmentationDataset(BaseDataset):
 
         if self.labels_available:
             # load label map
-            label_path = os.path.join(self.labels, f"{self.indices[idx]}_label.{self.labels_data_format}")
+            label_path = os.path.join(self.labels, f"{self.label_prefix}{self.indices[idx]}{self.label_suffix}.{self.labels_data_format}")
             label_img = tifffile.imread(label_path) if self.labels_data_format=="tif" else cv2.imread(label_path,-1)
-
             label_one_hot = np.zeros((label_img.shape[0],label_img.shape[1],len(self.map_look_up)), dtype=np.float32)
             for key, value in self.map_look_up.items():
                 label_one_hot[label_img==value,key] = 1.0
@@ -118,3 +121,24 @@ class BaseSegmentationDataset(BaseDataset):
 
     def get_samples(self):
         return self.indices
+
+    def _update_label_maps(self):
+        map_lst = list()
+        for file in os.listdir(self.labels):
+            file_path = os.path.join(self.labels, file)
+            label_img = tifffile.imread(file_path) if self.labels_data_format=="tif" else cv2.imread(file_path,-1)
+            map_lst.extend(np.unique(label_img))
+
+        map_lst = sorted(map_lst)
+
+        if len(self.map_look_up)>1:
+            for i in range(len(self.map_look_up)):
+                if len(self.map_look_up)!=len(map_lst):
+                    raise ValueError("Label mapping incomplete")
+                else:
+                    self.map_look_up[i]= map_lst[i]
+        else:
+            if len(len(self.map_look_up))==0:
+                raise ValueError("Label mapping incomplete")
+            else:
+                self.map_look_up[0]= map_lst[-1]
