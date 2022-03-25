@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+
 import os
 import wandb
 import logging
@@ -35,7 +38,7 @@ config = initialize_wandb(
     experiment_dir=experiment_dir,
     config_name=config_name
 )
-
+logging.warn(f"Working Dir: {os.getcwd()}")
 seed_everything(seed=cfg_yaml['experiment.seed']['value'])
 parameters_splitted = split_parameters(config, ["model", "train", "data"])
 
@@ -52,4 +55,5 @@ if 'train.cross_validation.n_splits' in cfg_yaml:
 else:
     trainer.fit(model, data)
     test_results = trainer.test(model=model, datamodule=data)
+    wandb.log({'test/loss':test_results[0]['test/loss']})
 wandb.finish()

@@ -138,6 +138,32 @@ class ImgSegProcessingPipeline:
                                 p=params.random_resized_propability
                             )
                         )
+        if  hasattr(params, 'random_crop_size') and \
+            hasattr(params, 'random_crop_probability'):
+                enabled=True
+                if hasattr(params,'random_crop_crop_enabled') and not params.random_crop_crop_enabled:
+                    enabled=False
+                if enabled:
+                    transform.append(
+                            A.RandomCrop(
+                                height=params.random_crop_size[0],
+                                width=params.random_crop_size[1],
+                                p=params.random_crop_probability
+                            )
+                        )
+        if  hasattr(params, 'center_crop_size') and \
+            hasattr(params, 'center_crop_probability'):
+                enabled=True
+                if hasattr(params,'center_crop_crop_enabled') and not params.center_crop_crop_enabled:
+                    enabled=False
+                if enabled:
+                    transform.append(
+                            A.CenterCrop(
+                                height=params.center_crop_size[0],
+                                width=params.center_crop_size[1],
+                                p=params.center_crop_probability
+                            )
+                        )
 
         if  hasattr(params, 'color_jitter_brightness') and \
             hasattr(params, 'color_jitter_contrast') and \

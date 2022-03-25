@@ -2,12 +2,12 @@
 #  This is done to avoid defining the same variables in multiple places.
 
 wandb.project_name:
-  value: insect-seed-detection
+  value: autoencoder_2022_HL60_Sim_2D
 # The w&b user or group the project should belong to.
 wandb.entity:
-  value: marcelschilling
+  value: lucare
 wandb.notes:
-  value: Retrain on small dataset
+  value: 2022_HL60_Sim_2D
 wandb.tags:
   value: null
 # Valid values: online/enabled, offline, disabled
@@ -15,4 +15,4 @@ wandb.tags:
 # offline = runs in offline mode, writes all data to disk for later syncing to a server.
 # disabled = makes all calls to wandb api's noop's.
 wandb.mode:
-  value: disabled
+  value: online

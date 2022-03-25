@@ -38,8 +38,7 @@ def load_model(model_params: dict, checkpoint_path_str = None):
         optimizer = load_class(TORCH_OPTIMIZERS_MODULE, optimizer_config['type'])
         optimizer_params_config = split_parameters(dict_to_config(optimizer_config))
         optimizer_params = optimizer_params_config['params']
-        if 'params' in optimizer_params and optimizer_params['params'] == model_params["name"]:
-            optimizer_params['params'] = model.parameters()
+        optimizer_params['params'] = model.parameters()
         optim_instance = optimizer(**optimizer_params_config['params'])
         lrs = None
         lrs_instance = None
