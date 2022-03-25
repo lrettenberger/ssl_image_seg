@@ -47,7 +47,6 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
         self.samples_dir = samples_dir
         self.labels_dir = labels_dir
         self.labels_dmap_dir = labels_dmap_dir
-        self.label_suffix = label_suffix
 
         self.train_labeled_root_dir     = os.path.join(self.root_dir, "train")
         if self.simulated_dataset:

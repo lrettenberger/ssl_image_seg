@@ -67,8 +67,6 @@ class BaseInstanceSegmentationDataset(BaseDataset):
         self.raw_mode = False
         self.label_raw_mode = False
 
-        self.label_suffix = label_suffix
-
 
     def __len__(self):
         return len(self.indices)
