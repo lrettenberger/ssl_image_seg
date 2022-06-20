@@ -6,28 +6,21 @@ experiment.seed:
 
 # Model Configuration
 model.name:
-  value: UnetInstSegSupervised
-model.params.input_height:
-  value: 512
+  value: ResnetClassifier
 model.params.in_channels:
-  value: 1
-model.params.out_channels:
+  value: 3
+model.params.num_classes:
   value: 1
 model.params.encoder_type:
-  value: resnet50
+  value: resnet18
 model.params.pretraining_weights:
-  value: /home/ws/kg2371/projects/self-supervised-biomedical-image-segmentation/results/first-shot/BaseInstanceSegmentationDataModule/SResUnet/0099/dnn_weights.ckpt
+  #value: /home/ws/kg2371/projects/self-supervised-biomedical-image-segmentation/results/first-shot/IsicDermoDataModule/Mocov2/0056/dnn_weights-v9.ckpt
+  value: null
+  #value: imagenet
 model.params.encoder_frozen:
   value: false
-model.params.decoder_filters:
-  value: [512, 256, 128, 64, null]
-model.params.ae_mode:
-  value: false
-model.params.imagenet_pretraing:
-  value: false
 model.loss_fcn:
-  value: SmoothL1Loss
-
+  value: BCELoss
 
 # Optimizer
 model.optimizer.type:
@@ -51,7 +44,7 @@ model.optimizer.lrs.params.min_lr:
 
 # Trainer Configuration
 train.trainer.max_epochs:
-  value: 150
+  value: 200
 train.trainer.num_sanity_val_steps:
   value: 0
 train.trainer.gpus:
@@ -61,23 +54,28 @@ train.trainer.reload_dataloaders_every_epoch:
 
 # Data Configuration
 data.datamodule.name:
-  value: BaseInstanceSegmentationDataModule
+  value: IsicDermoDataModule
 data.datamodule.root_dirs:
   value: 
-    local: /home/ws/kg2371/lsdf/Daten_Schilling/datasets/2022_HL60_Sim_2D
+    local: /home/ws/kg2371/datasets/2017_ISIC_Derma
     iai_gpu: 
 data.datamodule.device:
-  value: local
+  value: 
+    local
 data.datamodule.arguments.dataset_size:
-  value: 0.01
+  value: 1.0
+data.datamodule.arguments.initial_labeled_ratio:
+  value: 1.0
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
-  value: 8
-data.datamodule.arguments.num_workers:
-  value: 32
-data.datamodule.arguments.label_suffix:
-  value: '_label'
+  value: 64
+data.datamodule.arguments.classifier_mode:
+  value: true
+data.datamodule.arguments.classify_melanoma:
+  value: true
+  
+  
 
 # Callbacks Configuration
 train.callbacks.save_k_top_models:
@@ -113,35 +111,20 @@ train.callbacks.epoch_duration_enabled:
 
 
 # General Augmentations
-data.img_processing.norm_type:
-  value: per_image
+# data.img_processing.norm_type:
+#   value: per_image
+
 data.img_processing.img_type:
-  value: mono_16_bit
+  value: rgb_8_bit
 data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:
-  value: [565,807]
+  value: [512,512]
 
 
 # Augmentations
 data.img_processing.aug1.replay_processing_pipeline:
   value: false
-
-# Random Crop -> No resize to not disort the form
-data.img_processing.aug1.random_crop_crop_enabled:
-  value: true
-data.img_processing.aug1.random_crop_size:
-  value: [512, 512]
-data.img_processing.aug1.random_crop_probability:
-  value: 1.0
-
-# Val = Center crop -> Always the same
-data.img_processing.validation_aug.center_crop_crop_enabled:
-  value: true
-data.img_processing.validation_aug.center_crop_size:
-  value: [512, 512]
-data.img_processing.validation_aug.center_crop_probability:
-  value: 1.0
 
 # # Flip
 # data.img_processing.aug1.aug_flip_prob:
