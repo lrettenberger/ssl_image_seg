@@ -50,9 +50,9 @@ class BaseSegmentationDataset(BaseDataset):
         all_samples_sorted = sorted(
             glob.glob(f"{self.samples}{os.path.sep}*.{samples_data_format}"),
             key=lambda x: 
-                x.split(f"{self.samples}{os.path.sep}")[1].split(
+                int(x.split(f"{self.samples}{os.path.sep}")[1].split(
                     f".{samples_data_format}"
-            ),
+            )[0]),
         )
         self.indices = []
         if not empty_dataset:
@@ -79,9 +79,7 @@ class BaseSegmentationDataset(BaseDataset):
             # load label map
             label_path = os.path.join(self.labels, f"{self.label_prefix}{self.indices[idx]}{self.label_suffix}.{self.labels_data_format}")
             label_img = tifffile.imread(label_path) if self.labels_data_format=="tif" else cv2.imread(label_path,-1)
-            label_one_hot = np.zeros((label_img.shape[0],label_img.shape[1],len(self.map_look_up)), dtype=np.float32)
-            for key, value in self.map_look_up.items():
-                label_one_hot[label_img==value,key] = 1.0
+            label_one_hot = np.expand_dims(((label_img[:,:,0] > 0)*1).astype(np.float32),2)
         else:
             label_one_hot = np.zeros((sample_img.shape))
 

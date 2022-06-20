@@ -6,10 +6,12 @@ from matplotlib.pyplot import cla
 import torch
 import numpy as np
 import pandas as pd
+import albumentations as A
+import random
 
 from DLIP.data.base_classes.base_dataset import BaseDataset
 
-class IsicDermoDataset(BaseDataset):
+class BearDetectionDataset(BaseDataset):
     def __init__(
         self,
         root_dir: str,
@@ -17,19 +19,15 @@ class IsicDermoDataset(BaseDataset):
         labels_data_format="png",
         transforms=None,
         empty_dataset=False,
-        insert_bg_class=False,
         labels_available=True,
         return_trafos=False,
         classifier_mode = False,
-        classify_melanoma = False,
-        balance_classes = False
     ):
         self.root_dir = root_dir
         self.samples_data_format = samples_data_format
         self.labels_data_format = labels_data_format
         self.labels_dir = os.path.join(self.root_dir, 'labels')
         self.samples_dir = os.path.join(self.root_dir, 'samples')
-        self.insert_bg_class = insert_bg_class
         self.labels_available = labels_available
         self.return_trafos = return_trafos
         self.transforms = transforms
@@ -42,63 +40,86 @@ class IsicDermoDataset(BaseDataset):
 
         all_samples_sorted = sorted(
             glob.glob(f"{self.samples_dir}{os.path.sep}*.{self.samples_data_format}"),
-            key=lambda x: int(x.split(f'.{self.samples_data_format}')[0].split('_')[-1]),
+            key=lambda x: int(x.split('/')[-1].split('.')[0]),
         )
 
         self.classifier_mode = classifier_mode
-        if self.classifier_mode:
-            # 0,1 -> seborrheic_keratosis
-            # 0,0 -> Unknown
-            # 1,0 -> Melanoma
-            # one hot = [Melanoma,seborrheic_keratosis,nevus]
-            classification_classes = (pd.read_csv(os.path.join(root_dir,'ground_truth_labels.csv')).set_index('image_id')).to_dict('image_id')
-            self.classification_classes_one_hot = {}
-            for key in classification_classes.keys():
-                item = classification_classes[key]
-                if classify_melanoma:
-                    # Melanoma detection 
-                    if item['melanoma'] == 1.0:
-                        self.classification_classes_one_hot[key] = np.array([1]).astype(np.float32)
-                    else:
-                        self.classification_classes_one_hot[key] = np.array([0]).astype(np.float32)
-                else:
-                    # seborrheic_keratosis detection
-                    if item['seborrheic_keratosis'] == 1.0:
-                        self.classification_classes_one_hot[key] = np.array([1]).astype(np.float32)
-                    else:
-                        self.classification_classes_one_hot[key] = np.array([0]).astype(np.float32)
+        self.classification_classes = (pd.read_csv(os.path.join(root_dir,'ground_truth_labels.csv')).set_index('image_id')).to_dict('image_id')
+        self.classes_one_hot = {}
+        for key in self.classification_classes:
+            clazz = self.classification_classes[key]['class']
+            class_one_hot = np.zeros(7)
+            class_one_hot[clazz] = 1.
+            self.classes_one_hot[f'{key:012d}'] = class_one_hot
         self.indices = []
         if not empty_dataset:
-            self.indices = [i.split(f'.{self.samples_data_format}')[0].split('_')[-1] for i in all_samples_sorted]
+            self.indices = [i.split('/')[-1].split('.')[0] for i in all_samples_sorted]
         self.raw_mode = False
-    
+ 
     def __len__(self):
         return len(self.indices)
     
-    
-    def balance_classes(self):
-        all_ones = [x for x in self.indices if int(self.classification_classes_one_hot[f'ISIC_{x}']) == 1]
-        all_zeros = [x for x in self.indices if int(self.classification_classes_one_hot[f'ISIC_{x}']) == 0]
-        multplied = [entry for entry in all_ones for _ in range(round(len(all_zeros) / len(all_ones)))]
-        combined = self.indices + multplied
-        self.indices = combined
-
     def __getitem__(self, index):
         if self.classifier_mode:
             return self.getitem_classification(index)
         else:
             return self.getitem_semantic_segmentation(index)
+        
+        
+    def edit_sample_size(self,height,width):
+        augs = self.transforms[0].transform['aug'][:]
+        for i in range(len(augs)):
+            if type(augs[i]) == A.RandomResizedCrop:
+                augs[i] = A.RandomResizedCrop(
+                    always_apply=augs[i].always_apply,
+                    p=augs[i].p,
+                    height=height,
+                    width=width,
+                    scale=augs[i].scale,
+                    ratio=augs[i].ratio,
+                    interpolation=augs[i].interpolation
+                )
+        self.transforms[0].transform['aug'] = A.Compose(augs)
+        augs = self.transforms[0].transform['pre'][:]
+        for i in range(len(augs)):
+            if type(augs[i]) == A.Resize:
+                augs[i] = A.Resize(
+                    height=height,
+                    width=width,
+                )
+        self.transforms[0].transform['pre'] = A.Compose(augs) 
+        # 1
+        augs = self.transforms[1].transform['aug'][:]
+        for i in range(len(augs)):
+            if type(augs[i]) == A.RandomResizedCrop:
+                augs[i] = A.RandomResizedCrop(
+                    always_apply=augs[i].always_apply,
+                    p=augs[i].p,
+                    height=height,
+                    width=width,
+                    scale=augs[i].scale,
+                    ratio=augs[i].ratio,
+                    interpolation=augs[i].interpolation
+                )
+        self.transforms[1].transform['aug'] = A.Compose(augs)
+        
+        augs = self.transforms[1].transform['pre'][:]
+        for i in range(len(augs)):
+            if type(augs[i]) == A.Resize:
+                augs[i] = A.Resize(
+                    height=height,
+                    width=width,
+                )
+        self.transforms[1].transform['pre'] = A.Compose(augs)        
 
     def getitem_classification(self, idx):
         sample_img = np.array(
-            cv2.imread(os.path.join(self.samples_dir,
-                f"ISIC_{self.indices[idx]}.{self.samples_data_format}"),
-                -1,
-            )
+            cv2.imread(os.path.join(self.samples_dir,f"{self.indices[idx]}.{self.samples_data_format}"),-1)
         )
         sample_img = cv2.cvtColor(sample_img, cv2.COLOR_BGR2RGB)
 
-        label = self.classification_classes_one_hot[f'ISIC_{self.indices[idx]}']
+        #label = np.expand_dims(np.array((self.classes_one_hot[self.indices[idx]])).astype(np.float32),0)
+        label = np.array((self.classes_one_hot[self.indices[idx]])).astype(np.float32)
 
         sample_img_lst = []
         for transform in self.transforms:
@@ -116,26 +137,16 @@ class IsicDermoDataset(BaseDataset):
 
     def getitem_semantic_segmentation(self, idx):
         sample_img = np.array(
-            cv2.imread(os.path.join(self.samples_dir,
-                f"ISIC_{self.indices[idx]}.{self.samples_data_format}"),
-                -1,
-            )
+            cv2.imread(os.path.join(self.samples_dir,f"{self.indices[idx]}.{self.samples_data_format}"),-1)
         )
-
         sample_img = cv2.cvtColor(sample_img, cv2.COLOR_BGR2RGB)
-
+        
         label = None
         if self.labels_available:
-            label_path = os.path.join(
-                self.labels_dir, 
-                f"ISIC_{self.indices[idx]}_segmentation.{self.labels_data_format}"
-            )
+            label_path = os.path.join(self.labels_dir,f"{self.indices[idx]}.{self.labels_data_format}")
             label = cv2.imread(label_path, -1)
             label = np.where(label == 0, 0,1)
             label = np.expand_dims(label,2)
-            if self.insert_bg_class:
-                # convert to one hot encoding
-                label = np.stack((label,np.where(label,0,1)))
 
         # raw mode -> no transforms
         if self.raw_mode:
@@ -157,6 +168,24 @@ class IsicDermoDataset(BaseDataset):
             sample_img_lst = sample_img_lst[0]
             label_lst = label_lst[0] if len(label_lst) > 0 else label_lst
             trafo_lst = trafo_lst[0] if len(trafo_lst) > 0 else trafo_lst
+            
+            
+        # custom segement out image with mask
+        # selected_image = 0
+        # if random.random() > 0.5:
+        #     selected_image=1
+        # rand_val = random.random()
+        # if 0.4 > rand_val > 0.0:
+        #     # just mask it out black
+        #     masked = torch.Tensor(np.where((np.repeat(label_lst[selected_image].numpy(),3,axis=2) == 1),sample_img_lst[selected_image].permute(1,2,0),0)).permute(2,0,1)
+        #     sample_img_lst[selected_image] = masked
+        # if 0.8 > rand_val > 0.4:
+        #     blurred_image = cv2.GaussianBlur(sample_img_lst[selected_image].permute(1,2,0).numpy(), (101, 101), cv2.BORDER_DEFAULT)
+        #     masked = torch.Tensor(np.where((np.repeat(label_lst[selected_image].numpy(),3,axis=2) == 1),sample_img_lst[selected_image].permute(1,2,0),blurred_image)).permute(2,0,1)  
+        #     sample_img_lst[selected_image] = masked
+        #cv2.imwrite('sample.png',(sample_img_lst[selected_image]*255).permute(1,2,0).numpy().astype(np.uint8))
+        #cv2.imwrite('masked.png',(masked*255).permute(1,2,0).numpy().astype(np.uint8))
+        # end
         
         # sample_img_lst (optional: labels) (optional: trafos)
         if not self.return_trafos and not self.labels_available:
