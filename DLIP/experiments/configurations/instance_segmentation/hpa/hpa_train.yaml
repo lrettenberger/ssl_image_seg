@@ -16,17 +16,17 @@ model.params.out_channels:
 model.params.encoder_type:
   value: resnet50
 model.params.pretraining_weights:
-  value: /home/ws/kg2371/projects/self-supervised-biomedical-image-segmentation/results/first-shot/BaseInstanceSegmentationDataModule/SResUnet/0099/dnn_weights.ckpt
+  value: null
 model.params.encoder_frozen:
   value: false
 model.params.decoder_filters:
-  value: [512, 256, 128, 64, null]
+  value: [512, 256, 128, 64, 32]
 model.params.ae_mode:
   value: false
 model.params.imagenet_pretraing:
   value: false
 model.loss_fcn:
-  value: SmoothL1Loss
+  value: DiceLoss
 
 
 # Optimizer
@@ -61,15 +61,15 @@ train.trainer.reload_dataloaders_every_epoch:
 
 # Data Configuration
 data.datamodule.name:
-  value: BaseInstanceSegmentationDataModule
+  value: BaseSegmentationDataModule
 data.datamodule.root_dirs:
   value: 
-    local: /home/ws/kg2371/lsdf/Daten_Schilling/datasets/2022_HL60_Sim_2D
+    local: /home/ws/kg2371/datasets/hpa
     iai_gpu: 
 data.datamodule.device:
   value: local
 data.datamodule.arguments.dataset_size:
-  value: 0.01
+  value: 1.0
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
@@ -77,7 +77,13 @@ data.datamodule.arguments.batch_size:
 data.datamodule.arguments.num_workers:
   value: 32
 data.datamodule.arguments.label_suffix:
-  value: '_label'
+  value: '_cell'
+data.datamodule.arguments.n_classes:
+  value: 1
+data.datamodule.arguments.labels_dir:
+  value: 'labels_sem_seg'
+data.datamodule.arguments.map_look_up:
+  value: [255]
 
 # Callbacks Configuration
 train.callbacks.save_k_top_models:
@@ -113,10 +119,10 @@ train.callbacks.epoch_duration_enabled:
 
 
 # General Augmentations
-data.img_processing.norm_type:
-  value: per_image
+# data.img_processing.norm_type:
+#   value: per_image
 data.img_processing.img_type:
-  value: mono_16_bit
+  value: mono_8_bit
 data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:

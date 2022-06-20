@@ -4,6 +4,7 @@ import wandb
 import torch.nn as nn
 
 from DLIP.models.zoo.compositions.base_composition import BaseComposition
+from DLIP.models.zoo.decoder.fcn_decoder import FCNDecoder
 from DLIP.models.zoo.decoder.unet_decoder import UnetDecoder
 from DLIP.models.zoo.encoder.resnet_encoder import ResNetEncoder
 from DLIP.models.zoo.encoder.unet_encoder import UnetEncoder
@@ -20,6 +21,7 @@ class UnetInstSegSupervised(BaseComposition):
         # encoder filters is not used if resnet is used as encoder
         encoder_filters: List = [64, 128, 256, 512, 1024],
         decoder_filters: List = [512, 256, 128, 64],
+        decoder_type = 'unet',
         dropout: float = 0.0,
         ae_mode = False,
         pretraining_weights = 'imagenet',
@@ -34,7 +36,6 @@ class UnetInstSegSupervised(BaseComposition):
         if encoder_type == 'unet':
             encoder = UnetEncoder(
                 input_channels = in_channels,
-                encoder_type = encoder_type,
                 encoder_filters = encoder_filters,
                 dropout=dropout,
                 bilinear=bilinear
@@ -46,16 +47,23 @@ class UnetInstSegSupervised(BaseComposition):
                 pretraining_weights=pretraining_weights,
                 encoder_frozen=encoder_frozen
             )
-
         self.append(encoder)
-        self.append(UnetDecoder(
-            n_classes = out_channels,
-            encoder_filters = encoder.get_skip_channels(),
-            decoder_filters = decoder_filters,
-            dropout=dropout,
-            billinear_downsampling_used = bilinear,
-            ae_mode = ae_mode
-        ))
+
+        decoder_type = decoder_type.lower()
+        if decoder_type == 'unet':
+            self.append(UnetDecoder(
+                n_classes = out_channels,
+                encoder_filters = encoder.get_skip_channels(),
+                decoder_filters = decoder_filters,
+                dropout=dropout,
+                billinear_downsampling_used = bilinear,
+                ae_mode = ae_mode
+            ))
+        elif decoder_type == 'fcn':
+            if 'img_size' not in kwargs or 'num_classes' not in kwargs:
+                raise Exception('Not enough params for fcn decoder! Aborting')
+            self.append(FCNDecoder(kwargs['img_size'], kwargs['num_classes']))
+        self.append(nn.Sigmoid())
  
     def training_step(self, batch, batch_idx):
         x, y_true = batch

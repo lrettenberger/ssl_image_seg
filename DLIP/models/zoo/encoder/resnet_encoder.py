@@ -16,10 +16,15 @@ class ResNetEncoder(BasicEncoder):
         input_channels: int,
         encoder_type = 'resnet50',
         pretraining_weights = 'imagenet',
-        encoder_frozen=False
+        encoder_frozen=False,
+        classification_output = False
     ):
-        super().__init__(input_channels)
+        super().__init__(input_channels,classification_output)
+        load_imagenet = False
+        if pretraining_weights == 'imagenet':
+            load_imagenet = True
         encoder_class = None
+        weights = None
         encoder_type = encoder_type.lower()
         # Its a resnet encoder!
         if encoder_type == 'resnet18':
@@ -34,9 +39,9 @@ class ResNetEncoder(BasicEncoder):
             encoder_class = torchvision.models.resnet152
         if encoder_class != None:
             # we determined resnet encoder type. Now we put it into the backbone module list
-            if pretraining_weights == 'imagenet':
+            if load_imagenet:
                 logging.info('Loading imagenet weights')
-            encoder = encoder_class(pretrained=True if pretraining_weights == 'imagenet' else False)
+            encoder = encoder_class(pretrained=load_imagenet)
             if input_channels != 3:
                 encoder.conv1 = nn.Conv2d(input_channels, 64, kernel_size=encoder.conv1.kernel_size, stride=encoder.conv1.stride, padding=encoder.conv1.padding,bias=encoder.conv1.bias)
             # Load pretraining weights
@@ -49,14 +54,48 @@ class ResNetEncoder(BasicEncoder):
                     pretraining_weights = os.path.join(pretraining_weights,'dnn_weights.ckpt')
                 weights = torch.load(pretraining_weights)
                 weights = weights['state_dict']
-                for key in list(weights.keys()):
-                    weights[key.replace('encoder.','')] = weights[key]
-                    del weights[key]
-                encoder.load_state_dict(weights)
+                if 'encoder_q.conv1.weight' in weights:
+                    # We assume its moco type if we have a encoder_q
+                    # Also we need the encoder_q key for the weigths to be extractable
+                    encoder_q_keys = [x for x in weights.keys() if 'encoder_q' in x]
+                    filtered_weights = {}
+                    for key in encoder_q_keys:
+                        filtered_weights[key.replace('encoder_q.','')] = weights[key]
+                    weights = filtered_weights
+                if 'module.encoder_q.conv1.weight' in weights:
+                    # We assume its moco type if we have a encoder_q
+                    # Also we need the encoder_q key for the weigths to be extractable
+                    encoder_q_keys = [x for x in weights.keys() if 'encoder_q' in x]
+                    filtered_weights = {}
+                    for key in encoder_q_keys:
+                        filtered_weights[key.replace('module.encoder_q.','')] = weights[key]
+                    weights = filtered_weights
+                elif 'encoder' in weights:
+                    for key in list(weights.keys()):
+                        weights[key.replace('encoder.','')] = weights[key]
+                        del weights[key]
+                missing_keys,unmatched_keys = encoder.load_state_dict(weights,strict=False)
+                logging.info(f'Missing Keys: {missing_keys}.')
+                logging.info(f'Unmatched Keys: {unmatched_keys}.')
                 logging.info(f'Loaded weights.')
             if encoder_frozen:
-                for param in encoder.parameters():
-                            param.requires_grad = False
+                if weights is not None:
+                    for n, p in encoder.named_parameters():
+                            if  n in weights:
+                                p.requires_grad = False
+                elif load_imagenet:
+                    for n, p in encoder.named_parameters():
+                        if 'fc' not in n:
+                            p.requires_grad = False
+                else:
+                    for n, p in encoder.named_parameters():
+                        if 'fc' not in n:
+                            p.requires_grad = False
+                logging.info('Unfrozen Layers:')
+                for n, p in encoder.named_parameters():
+                        if p.requires_grad:
+                            logging.info(n)
+                    
             encoder_layers = list(encoder.children())
             self.backbone.append(nn.Sequential(*encoder_layers[:3]))
             self.backbone.append(nn.Sequential(*encoder_layers[3:5]))
