@@ -7,35 +7,25 @@ experiment.seed:
 # Model Configuration
 model.name:
   value: Mocov2
-model.params.input_height:
-  value: 128
 model.params.in_channels:
   value: 3
-model.params.out_channels:
-  value: 1
-model.params.ae_mode:
-  value: false
 model.loss_fcn:
   value: SmoothL1Loss
 
 # Optimizer
 model.optimizer.type:
-  value: Adam
+  value: SGD
 model.optimizer.params.lr:
-  value: 0.001
+  value: 0.03
+model.optimizer.params.momentum:
+  value: 0.9
+model.optimizer.params.weight_decay:
+  value: 0.0001
 # LR Scheduler
 model.optimizer.lrs.type:
-  value: ReduceLROnPlateau
-model.optimizer.lrs.params.factor:
-  value: 0.5
-model.optimizer.lrs.params.patience:
-  value: 5
-model.optimizer.lrs.params.verbose:
-  value: false
-model.optimizer.lrs.params.cooldown:
-  value: 0
-model.optimizer.lrs.params.min_lr:
-  value: 0.00001
+  value: CosineAnnealingLR
+model.optimizer.lrs.params.T_max:
+  value: 4000
 
 
 # Trainer Configuration

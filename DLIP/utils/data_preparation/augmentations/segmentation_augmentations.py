@@ -185,8 +185,7 @@ class ImgSegProcessingPipeline:
                     )
 
         if  hasattr(params, 'gaussian_blur_prop') and \
-            hasattr(params, 'gaussian_blur_kernel_size') and \
-            hasattr(params, 'std_dev_range'):
+            hasattr(params, 'gaussian_blur_sigma'):
                 enabled=True
                 if hasattr(params,'gaussian_blur_enabled') and not params.gaussian_blur_enabled:
                     enabled=False
@@ -194,8 +193,8 @@ class ImgSegProcessingPipeline:
                     transform.append(
                         A.GaussianBlur(
                             p=params.gaussian_blur_prop,
-                            blur_limit = tuple(params.gaussian_blur_kernel_size),
-                            sigma_limit=tuple(params.std_dev_range)
+                            blur_limit = 0,
+                            sigma_limit=tuple(params.gaussian_blur_sigma)
                         )
                     )   
 

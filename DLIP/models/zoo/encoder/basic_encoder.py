@@ -5,10 +5,11 @@ import numpy as np
 from torch.nn.modules.container import ModuleList
 
 class BasicEncoder(nn.Module):
-    def __init__(self, input_channels:int):
+    def __init__(self, input_channels:int,classification_output:bool):
         super().__init__()
         self.backbone = ModuleList()
         self.input_channels = input_channels
+        self.classification_output = classification_output
 
     def get_dropout_iter(self, dropout: int, encoder_filters: List):
         if isinstance(dropout, float) or isinstance(dropout, int): 
@@ -31,11 +32,12 @@ class BasicEncoder(nn.Module):
         return skip_channels
 
 
-
     def forward(self, x):
         skip_connections = []
         down_value = x
         for down in self.backbone:
             skip_connections.insert(0, down(down_value))
             down_value = skip_connections[0]
+        if self.classification_output:
+            return skip_connections.pop(0)
         return skip_connections.pop(0), skip_connections  

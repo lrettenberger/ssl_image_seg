@@ -14,9 +14,9 @@ class UnetEncoder(BasicEncoder):
         input_channels: int,
         encoder_filters: List = [64, 128, 256, 512, 1024],
         dropout: float = 0,
-        bilinear: bool = False
+        bilinear: bool = False,
     ):
-        super().__init__(input_channels)
+        super().__init__(input_channels,classification_output=False)
         if bilinear == True:
             logging.info("Bilinear Upsampling is currently not supported. Ignoring.")
         self.bilinear = False
