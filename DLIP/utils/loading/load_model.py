@@ -6,6 +6,8 @@ from DLIP.utils.dlip_globals import(
     TORCH_OBJECTIVE_MODULE,
     TORCH_OPTIMIZERS_MODULE
 )
+import torch
+import numpy as np
 from DLIP.utils.loading.dict_to_config import dict_to_config
 from DLIP.utils.loading.load_class import load_class
 from DLIP.utils.loading.split_parameters import split_parameters
@@ -24,6 +26,8 @@ def load_model(model_params: dict, checkpoint_path_str = None):
             raise ModuleNotFoundError(f'Cant find class loss function {model_params["loss_fcn"]}.')
         loss_fcn_args = split_parameters(dict_to_config(model_params), ["loss_fcn"])['loss_fcn']
         loss_fcn_args = split_parameters(dict_to_config(loss_fcn_args), ["params"])['params']
+        if 'weight' in loss_fcn_args:
+            loss_fcn_args['weight'] = torch.Tensor(loss_fcn_args['weight'].astype(np.float32))
         model_args["loss_fcn"] = loss_class(**loss_fcn_args)
     model_type = load_class(MODELS_MODULE, model_params["name"])
 
@@ -46,6 +50,10 @@ def load_model(model_params: dict, checkpoint_path_str = None):
             lrs_config = optimizer_params_config['lrs']
             lrs = load_class(TORCH_LRS_MODULE, lrs_config['type'])
             lrs_params_config = split_parameters(dict_to_config(lrs_config))
+            # hacky solution
+            if 't_max' in lrs_params_config['params']:
+                lrs_params_config['params']['T_max'] = lrs_params_config['params']['t_max']
+                del lrs_params_config['params']['t_max']
             lrs_instance = lrs(
                 optim_instance,
                 **lrs_params_config['params']
