@@ -4,6 +4,7 @@ import os
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+from DLIP.utils.helper_functions.gray_level_check import gray_redundand
 
 from DLIP.data.base_classes.base_dataset import BaseDataset
 
@@ -76,7 +77,7 @@ class BaseInstanceSegmentationDataset(BaseDataset):
         sample_path = os.path.join(self.samples, f"{self.indices[idx]}.{self.samples_data_format}")
         sample_img = tifffile.imread(sample_path) if self.samples_data_format=="tif" else cv2.imread(sample_path,-1)
         
-        if sample_img.ndim>2:
+        if sample_img.ndim>2 and gray_redundand(sample_img):
             sample_img = sample_img[:,:,0]
 
         sample_img_lst = []
@@ -90,8 +91,9 @@ class BaseInstanceSegmentationDataset(BaseDataset):
             else:
                 label_path = os.path.join(self.labels_dmap, f"{self.label_prefix}{self.indices[idx]}{self.label_suffix}.{self.labels_dmap_data_format}")
                 label_img = tifffile.imread(label_path) if self.labels_dmap_data_format=="tif" else cv2.imread(label_path,-1)
+            label_img = label_img.squeeze()
             label_one_hot = np.zeros((label_img.shape[0],label_img.shape[1],1), dtype=np.float32)
-            label_one_hot[:,:,0] = label_img
+            label_one_hot[:,:,0] = label_img.squeeze()
         else:
             label_one_hot = np.zeros((sample_img.shape))
 
