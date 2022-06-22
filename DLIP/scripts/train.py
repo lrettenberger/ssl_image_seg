@@ -1,6 +1,3 @@
-import matplotlib
-matplotlib.use('Agg')
-
 import os
 import wandb
 import logging
@@ -13,6 +10,7 @@ from DLIP.utils.loading.load_trainer import load_trainer
 from DLIP.utils.loading.merge_configs import merge_configs
 from DLIP.utils.loading.parse_arguments import parse_arguments
 from DLIP.utils.loading.prepare_directory_structure import prepare_directory_structure
+
 from DLIP.utils.loading.split_parameters import split_parameters
 from DLIP.utils.cross_validation.cv_trainer import CVTrainer
 
@@ -38,12 +36,14 @@ config = initialize_wandb(
     experiment_dir=experiment_dir,
     config_name=config_name
 )
-logging.warn(f"Working Dir: {os.getcwd()}")
-seed_everything(seed=cfg_yaml['experiment.seed']['value'])
+
+seed_everything(seed=config['experiment.seed'])
+
 parameters_splitted = split_parameters(config, ["model", "train", "data"])
 
 model = load_model(parameters_splitted["model"])
 data = load_data_module(parameters_splitted["data"])
+
 trainer = load_trainer(parameters_splitted['train'], experiment_dir, wandb.run.name, data)
 
 if 'train.cross_validation.n_splits' in cfg_yaml:
@@ -54,6 +54,5 @@ if 'train.cross_validation.n_splits' in cfg_yaml:
     cv_trainer.fit(model=model,datamodule=data)
 else:
     trainer.fit(model, data)
-    test_results = trainer.test(model=model, datamodule=data)
-    wandb.log({'test/loss':test_results[0]['test/loss']})
+    test_results = trainer.test(model=model, dataloaders=data.test_dataloader())
 wandb.finish()

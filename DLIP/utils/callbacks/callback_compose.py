@@ -1,13 +1,18 @@
-from matplotlib.pyplot import imshow
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
 
 from DLIP.utils.callbacks.epoch_duration_log import EpochDurationLogCallback
+from DLIP.utils.callbacks.log_best_metric import LogBestMetricsCallback
+
 from DLIP.utils.callbacks.image_seg_log import ImageLogSegCallback
 from DLIP.utils.callbacks.image_inst_seg_log import ImageLogInstSegCallback
-from DLIP.utils.callbacks.increase_ssl_img_size import IncreaseSSLImageSizeCallback
-from DLIP.utils.callbacks.log_best_metric import LogBestMetricsCallback
 from DLIP.utils.callbacks.log_instance_seg_metrics import LogInstSegMetricsCallback
+from DLIP.utils.callbacks.increase_ssl_img_size import IncreaseSSLImageSizeCallback
+
+from DLIP.utils.callbacks.detectron_log_instance_seg_metrics import DetectronLogInstSegMetricsCallback
+from DLIP.utils.callbacks.detectron_log_instance_seg_img import DetectronLogInstSegImgCallback
+from DLIP.utils.callbacks.detectron_log_sem_seg_img import DetectronLogSemSegImgCallback
+
 from DLIP.utils.loading.split_parameters import split_parameters
 from DLIP.utils.loading.dict_to_config import dict_to_config
 
@@ -47,6 +52,19 @@ class CallbackCompose:
                 )
             )
 
+        if hasattr(self.params, 'epoch_duration_enabled') and self.params.epoch_duration_enabled:
+            self.callback_lst.append(
+                EpochDurationLogCallback()
+            )
+
+        if hasattr(self.params, 'best_metrics_log_enabled') and self.params.best_metrics_log_enabled:
+            self.callback_lst.append(
+                LogBestMetricsCallback(
+                    self.params.log_best_metric_dict
+                )
+            )
+
+        # UNet Callbacks
         if hasattr(self.params, 'img_seg_log_enabled')  and self.params.img_log_enabled:
             self.callback_lst.append(
                 ImageLogSegCallback()
@@ -58,17 +76,12 @@ class CallbackCompose:
                 ImageLogInstSegCallback(inst_seg_pp_params)
             )
 
-        if hasattr(self.params, 'best_metrics_log_enabled') and self.params.best_metrics_log_enabled:
+        if hasattr(self.params, 'inst_seg_metrics_log_enabled') and self.params.inst_seg_metrics_log_enabled:
+            inst_seg_pp_params = split_parameters(dict_to_config(vars(self.params)), ["inst_seg_pp"])["inst_seg_pp"]
             self.callback_lst.append(
-                LogBestMetricsCallback(
-                    self.params.log_best_metric_dict
-                )
+                LogInstSegMetricsCallback(inst_seg_pp_params)
             )
 
-        if hasattr(self.params, 'epoch_duration_enabled') and self.params.epoch_duration_enabled:
-            self.callback_lst.append(
-                EpochDurationLogCallback()
-            )
         if hasattr(self.params, 'increase_ssl_image_size_enabled') and self.params.increase_ssl_image_size_enabled:
             factor = 2
             if hasattr(self.params, 'increase_ssl_image_size_factor'):
@@ -76,12 +89,23 @@ class CallbackCompose:
             self.callback_lst.append(
                 IncreaseSSLImageSizeCallback(increase_factor=factor)
             )
-        
-        if hasattr(self.params, 'inst_seg_metrics_log_enabled') and self.params.inst_seg_metrics_log_enabled:
-            inst_seg_pp_params = split_parameters(dict_to_config(vars(self.params)), ["inst_seg_pp"])["inst_seg_pp"]
+
+        # Detectron Callbacks
+        if hasattr(self.params, 'detectron_inst_seg_metrics_log_enabled') and self.params.detectron_inst_seg_metrics_log_enabled:
             self.callback_lst.append(
-                LogInstSegMetricsCallback(inst_seg_pp_params)
-            )
+                DetectronLogInstSegMetricsCallback()
+            )    
+
+        if hasattr(self.params, 'detectron_inst_seg_img_log_enabled') and self.params.detectron_inst_seg_img_log_enabled:
+            self.callback_lst.append(
+                DetectronLogInstSegImgCallback()
+            )    
+
+        if hasattr(self.params, 'detectron_sem_seg_img_log_enabled') and self.params.detectron_sem_seg_img_log_enabled:
+            self.callback_lst.append(
+                DetectronLogSemSegImgCallback()
+            )    
+
 
     def get_composition(self):
         return self.callback_lst
