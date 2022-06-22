@@ -17,7 +17,7 @@ class UnetInstSegSupervised(BaseComposition):
         in_channels: int,
         out_channels: int,
         loss_fcn: nn.Module,
-        encoder_type = 'UNet',
+        encoder_type = 'unet',
         # encoder filters is not used if resnet is used as encoder
         encoder_filters: List = [64, 128, 256, 512, 1024],
         decoder_filters: List = [512, 256, 128, 64],

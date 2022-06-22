@@ -36,7 +36,7 @@ def load_model(model_params: dict, checkpoint_path_str = None):
     else:
         model = model_type.load_from_checkpoint(checkpoint_path=checkpoint_path_str, **(model_args))
 
-    optimizer_config = split_parameters(dict_to_config(model_params), ["optimizer"])
+    optimizer_config = split_parameters(dict_to_config(model_params))
     if "optimizer" in optimizer_config:
         optimizer_config = optimizer_config["optimizer"]
         optimizer = load_class(TORCH_OPTIMIZERS_MODULE, optimizer_config['type'])

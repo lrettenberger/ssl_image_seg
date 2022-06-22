@@ -106,6 +106,5 @@ class CallbackCompose:
                 DetectronLogSemSegImgCallback()
             )    
 
-
     def get_composition(self):
         return self.callback_lst

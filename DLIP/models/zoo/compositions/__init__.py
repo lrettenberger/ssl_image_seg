@@ -8,3 +8,5 @@ from .s_resnet_unet import SResUnet
 from .smp_unet_resnet import SmpUnetResnet
 from .moco_v2 import Mocov2
 from .resnet_classifier import ResnetClassifier
+from .detectron_instance import Detectron2Instance
+from .detectron_semantic import Detectron2Semantic

@@ -28,7 +28,7 @@ dependencies:
     - pillow==8.4.0
     - pyparsing==3.0.6
     - pytorch-lightning==1.4.9
-    - pytorch-lightning-bolts==0.3.2
+    - git+https://github.com/PytorchLightning/lightning-bolts.git@master 
     - pyyaml==6.0
     - slidingwindow==0.0.14
     - tifffile==2021.11.2
@@ -37,4 +37,7 @@ dependencies:
     - umap-learn==0.5.1
     - wandb==0.12.6
     - tables==3.7.0
+    - setuptools==59.5.0
+    - segmentation-models-pytorch==0.2.1
+    - git+https://github.com/facebookresearch/detectron2.git
     - -e .
