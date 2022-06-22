@@ -97,7 +97,7 @@ class UnetInstSegSupervised(BaseComposition):
         y_pred = self.forward(x)
         loss_n_c = self.loss_fcn(y_pred, y_true)
         loss = torch.mean(loss_n_c)
-        self.log("test/loss", loss, prog_bar=True, on_epoch=True, on_step=False)
+        self.log("test/dsc_score", 1-loss, prog_bar=True, on_epoch=True, on_step=False)
         return loss
 
     def log_imgs(self,x,y):
