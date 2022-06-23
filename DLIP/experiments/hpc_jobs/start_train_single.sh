@@ -13,11 +13,10 @@
 
 export CFG_FILE="/home/hk-project-sppo/sc1357/devel/self-supervised-biomedical-image-segmentation/DLIP/experiments/configurations/base_cfg/cfg_sem_seg_base.yaml"
 export RESULT_DIR="/home/hk-project-sppo/sc1357/data/ssl_benchmarks"
-export SWEEPID="marcelschilling/derma/6vektxxm"
 
 # remove all modules
 module purge
-module load compiler/intel/19.1 mpi/openmpi/4.0
+#module load compiler/intel/19.1 mpi/openmpi/4.0
 
 # activate cuda
 module load devel/cuda/11.2
@@ -30,14 +29,4 @@ conda activate env_ssl
 cd /home/hk-project-sppo/sc1357/devel/self-supervised-biomedical-image-segmentation/DLIP/scripts
 
 # start train
-mpirun \
-    --display-map \
-    --display-allocation \
-    --map-by ppr:2:socket:pe=19 \
-    bash -c '
-    export CUDA_VISIBLE_DEVICES=${OMPI_COMM_WORLD_LOCAL_RANK};
-    unset $(printenv | grep -e ^OMPI -e ^SLURM -e ^PMIX | cut -f 1 -d=);
-    unset KMP_AFFINITY
-    export OMP_NUM_THREADS=19
-    export MKL_NUM_THREADS=19
-    wandb agent $SWEEPID'
+python train.py --config_files $CFG_FILE --result_dir $RESULT_DIR
