@@ -72,7 +72,7 @@ data.datamodule.name:
   value: IsicDermoDataModule
 data.datamodule.root_dirs:
   value: 
-    local: /home/ws/sc1357/data/2017_ISIC_Derma/
+    local: /home/ws/kg2371/datasets/2017_ISIC_Derma
     iai_gpu: 
 data.datamodule.device:
   value: 
