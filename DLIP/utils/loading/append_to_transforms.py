@@ -26,5 +26,5 @@ def append_to_transforms(
     )
     test_transforms.append(
         SemanticSegmentationProccesor(
-            img_processing_pipeline.get_val_transform())
+            img_processing_pipeline.get_test_transform())
     )

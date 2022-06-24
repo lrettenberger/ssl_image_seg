@@ -24,7 +24,6 @@ class DetectronInstanceSegmentationDataModule(BasePLDataModule):
         drop_last=False,
         samples_dir: str = "samples",
         labels_dir: str = "labels",
-        labels_dmap_dir: str = "labels_dist_map",
         label_suffix="_label",
         label_prefix="",
         **kwargs
@@ -47,7 +46,6 @@ class DetectronInstanceSegmentationDataModule(BasePLDataModule):
         self.root_dir = root_dir
         self.samples_dir = samples_dir
         self.labels_dir = labels_dir
-        self.labels_dmap_dir = labels_dmap_dir
 
         self.train_labeled_root_dir     = os.path.join(self.root_dir, "train")
         if self.simulated_dataset:
@@ -68,7 +66,7 @@ class DetectronInstanceSegmentationDataModule(BasePLDataModule):
         self.unlabeled_train_dataset: BaseInstanceSegmentationDectronDataset = None
         self.val_dataset: BaseInstanceSegmentationDectronDataset = None
         self.test_dataset: BaseInstanceSegmentationDectronDataset = None
-        self.samples_data_format, self.labels_data_format, self.labels_dmap_data_format = self._determine_data_format()
+        self.samples_data_format, self.labels_data_format = self._determine_data_format()
         self.label_suffix = label_suffix
         self.label_prefix = label_prefix
         self._init_datasets()
@@ -81,10 +79,8 @@ class DetectronInstanceSegmentationDataModule(BasePLDataModule):
             transforms=self.train_transforms,
             samples_dir=self.samples_dir,
             labels_dir=self.labels_dir,
-            labels_dmap_dir=self.labels_dmap_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            labels_dmap_data_format=self.labels_dmap_data_format,
             label_suffix=self.label_suffix,
             label_prefix=self.label_prefix
         )
@@ -98,10 +94,8 @@ class DetectronInstanceSegmentationDataModule(BasePLDataModule):
             empty_dataset=True,
             samples_dir=self.samples_dir,
             labels_dir=self.labels_dir,
-            labels_dmap_dir=self.labels_dmap_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            labels_dmap_data_format=self.labels_dmap_data_format,
             label_suffix=self.label_suffix,
             label_prefix=self.label_prefix
         )
@@ -113,11 +107,9 @@ class DetectronInstanceSegmentationDataModule(BasePLDataModule):
             empty_dataset=True if self.simulated_dataset else False,
             samples_dir=self.samples_dir,
             labels_dir=self.labels_dir,
-            labels_dmap_dir=self.labels_dmap_dir,
             return_trafos=self.return_unlabeled_trafos,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            labels_dmap_data_format=self.labels_dmap_data_format,
             label_suffix=self.label_suffix,
             label_prefix=self.label_prefix
         )
@@ -127,16 +119,14 @@ class DetectronInstanceSegmentationDataModule(BasePLDataModule):
             transforms=self.test_transforms,
             samples_dir=self.samples_dir,
             labels_dir=self.labels_dir,
-            labels_dmap_dir=self.labels_dmap_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            labels_dmap_data_format=self.labels_dmap_data_format,
             label_suffix=self.label_suffix,
             label_prefix=self.label_prefix
         )
 
     def _determine_data_format(self):
-        extensions = {self.samples_dir: list(), self.labels_dir: list(), self.labels_dmap_dir: list()}
+        extensions = {self.samples_dir: list(), self.labels_dir: list()}
 
         for folder in extensions.keys():
             for file in os.listdir(os.path.join(self.train_labeled_root_dir,folder)):
@@ -146,5 +136,4 @@ class DetectronInstanceSegmentationDataModule(BasePLDataModule):
                 extensions[folder].append(os.path.splitext(file)[1].replace(".", ""))
 
         return max(set(extensions[self.samples_dir]), key = extensions[self.samples_dir].count),\
-               max(set(extensions[self.labels_dir]), key = extensions[self.labels_dir].count), \
-               max(set(extensions[self.labels_dmap_dir]), key = extensions[self.labels_dmap_dir].count) 
+               max(set(extensions[self.labels_dir]), key = extensions[self.labels_dir].count)

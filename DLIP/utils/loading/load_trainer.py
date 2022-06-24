@@ -17,6 +17,7 @@ def load_trainer(train_params: dict, result_dir: str, run_name: str, data:Any = 
     trainer_args = split_parameters(
         dict_to_config(train_params),["trainer"])["trainer"]
     
+
     # logger = TensorBoardLogger(
     #     save_dir=result_dir,
     #     name=run_name,

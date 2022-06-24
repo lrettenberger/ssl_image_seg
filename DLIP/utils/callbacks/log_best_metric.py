@@ -57,4 +57,5 @@ class LogBestMetricsCallback(Callback):
                 # step=trainer.global_step
             )
             
+
         trainer.final_scores = self.metric_dict
