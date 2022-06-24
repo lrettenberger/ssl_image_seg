@@ -68,6 +68,8 @@ def visualize_instances_map(
         contours_crop = np.squeeze(
             contours_crop[0][0].astype("int32")
         )  # * opencv protocol format may break
+        if contours_crop.ndim==1:
+            contours_crop = np.expand_dims(contours_crop,0)
         contours_crop += np.asarray([[x1, y1]])  # index correction
         if type_map is not None:
             type_map_crop = type_map[y1:y2, x1:x2]

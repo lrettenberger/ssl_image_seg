@@ -5,6 +5,7 @@ import wandb
 import cv2
 import numpy as np
 from DLIP.utils.visualization.inst_seg_contour import visualize_instances_map
+from DLIP.utils.metrics.inst_seg_metrics import remap_label
 from skimage.transform import resize
 from DLIP.models.zoo.compositions.detectron_instance import get_mask_encoding
 from typing import List
@@ -60,16 +61,16 @@ class DetectronLogInstSegImgCallback(Callback):
 
             prediction_lst_ol.append(wandb.Image(y_inst_pred_rgb.copy(), caption=f"{ix+1}") )
             gt_lst_ol.append(wandb.Image(y_inst_gt_rgb.copy(), caption=f"{ix+1}"))
-
-            prediction_lst_ct.append(
-                wandb.Image(
-                    visualize_instances_map(img_resized,pred_mask),
-                    caption=f"{ix+1}")
-            )
             
             gt_lst_ct.append(
                 wandb.Image(
                     visualize_instances_map(img_resized,gt_mask),
+                    caption=f"{ix+1}")
+            )
+
+            prediction_lst_ct.append(
+                wandb.Image(
+                    visualize_instances_map(img_resized,pred_mask),
                     caption=f"{ix+1}")
             )
 

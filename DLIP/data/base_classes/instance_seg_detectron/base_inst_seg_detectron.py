@@ -6,12 +6,12 @@ import cv2
 import matplotlib.pyplot as plt
 from DLIP.utils.helper_functions.gray_level_check import gray_redundand
 import torch
-from DLIP.data.base_classes.segmentation.base_seg_dataset import BaseSegmentationDataset
+from DLIP.data.base_classes.instance_segmentation.base_inst_seg_dataset import BaseInstanceSegmentationDataset
 from detectron2.structures import Instances
 from detectron2.structures import Boxes, BitMasks
 
 
-class BaseInstanceSegmentationDectronDataset(BaseSegmentationDataset):
+class BaseInstanceSegmentationDectronDataset(BaseInstanceSegmentationDataset):
     def __getitem__(self, idx):
         # load sample
         sample_path = os.path.join(self.samples, f"{self.indices[idx]}.{self.samples_data_format}")
@@ -39,7 +39,6 @@ class BaseInstanceSegmentationDectronDataset(BaseSegmentationDataset):
         obj_ids = np.unique(mask_img)
 
         # first id is the background, so remove it
-        #obj_ids = obj_ids[1:]
         obj_ids = obj_ids[1:]
 
         # split the color-encoded mask into a set
@@ -81,4 +80,4 @@ class BaseInstanceSegmentationDectronDataset(BaseSegmentationDataset):
                     torch.zeros(0,mask_img.shape[0],mask_img.shape[1])
             )
         
-        return  {"image": sample_img, "instances": target} # {"image": torch.from_numpy(sample_img).permute(2,0,1), "instances": target} #
+        return  {"image": sample_img, "instances": target}

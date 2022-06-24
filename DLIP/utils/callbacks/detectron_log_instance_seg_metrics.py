@@ -5,6 +5,9 @@ from DLIP.utils.metrics.inst_seg_metrics import remap_label
 from DLIP.models.zoo.compositions.detectron_instance import get_mask_encoding
 from typing import List
 
+def calc_metric(name, gt_mask, pred_mask):
+    score = inst_seg_metrics_dict[name](remap_label(gt_mask), remap_label(pred_mask))
+
 class DetectronLogInstSegMetricsCallback(Callback):
     """
     Logs instance segmentation metrics

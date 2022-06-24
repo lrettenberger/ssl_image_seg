@@ -92,7 +92,7 @@ class Detectron2Instance(pl.LightningModule):
         else:
             test_metric = calc_object_metric(batch, prediction)
 
-        self.log("test/loss", 1-test_metric)
+        self.log("test/score", test_metric)
 
 
     def configure_optimizers(self):
@@ -107,12 +107,20 @@ def setup(args, base_cfg_path, **kwargs):
     """
     cfg = get_cfg()
 
+    # load default cfg
+    cfg.merge_from_file(base_cfg_path)
+
     cfg["SEED"] = int(np.random.get_state()[1][0])
 
     if "base_lr" in kwargs.keys():
         cfg["SOLVER"]["BASE_LR"] = kwargs["base_lr"]
+        del kwargs["base_lr"]
 
-    cfg.merge_from_file(base_cfg_path)
+    if "sub_batch_size" in kwargs.keys():
+        cfg["MODEL"]["RPN"]["BATCH_SIZE_PER_IMAGE"] = int(kwargs["sub_batch_size"])
+        cfg["MODEL"]["ROI_HEADS"]["BATCH_SIZE_PER_IMAGE"] = int(kwargs["sub_batch_size"])
+        del kwargs["sub_batch_size"]
+
     cfg = merge_cfg_from_param_file(cfg,**kwargs)
 
     cfg.freeze()
