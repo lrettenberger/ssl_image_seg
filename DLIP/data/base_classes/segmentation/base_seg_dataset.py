@@ -50,9 +50,9 @@ class BaseSegmentationDataset(BaseDataset):
         all_samples_sorted = sorted(
             glob.glob(f"{self.samples}{os.path.sep}*.{samples_data_format}"),
             key=lambda x: 
-                x.split(f"{self.samples}{os.path.sep}")[1].split(
+                int(x.split(f"{self.samples}{os.path.sep}")[1].split(
                     f".{samples_data_format}"
-            ),
+            )[0]),
         )
         self.indices = []
         if not empty_dataset:

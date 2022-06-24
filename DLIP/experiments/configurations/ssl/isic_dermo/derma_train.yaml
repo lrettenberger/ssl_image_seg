@@ -6,11 +6,11 @@ experiment.seed:
 
 # Model Configuration
 model.name:
-  value: Mocov2
-model.params.in_channels:
-  value: 3
-model.loss_fcn:
-  value: SmoothL1Loss
+  value: DenseCL
+model.params.num_negatives:
+  value: 1600
+model.params.num_negatives_val:
+  value: 400
 
 # Optimizer
 model.optimizer.type:
@@ -25,7 +25,7 @@ model.optimizer.params.weight_decay:
 model.optimizer.lrs.type:
   value: CosineAnnealingLR
 model.optimizer.lrs.params.T_max:
-  value: 4000
+  value: 2000
 
 
 # Trainer Configuration
@@ -53,7 +53,9 @@ data.datamodule.arguments.initial_labeled_ratio:
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
-  value: 400
+  value: 100
+data.datamodule.arguments.dataset_size:
+  value: 1.0
 
 
 # Callbacks Configuration
@@ -71,8 +73,8 @@ train.callbacks.epoch_duration_enabled:
   value: true
 
 # General Augmentations
-# data.img_processing.norm_type:
-#   value: per_image
+data.img_processing.norm_type:
+  value: per_image
 
 data.img_processing.img_type:
   value: rgb_8_bit
@@ -84,7 +86,6 @@ data.img_processing.img_size:
 # Augmentations
 data.img_processing.aug1.replay_processing_pipeline:
   value: false
-
 
 # Random Crop
 data.img_processing.aug1.random_resized_propability:

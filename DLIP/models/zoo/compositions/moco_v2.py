@@ -17,6 +17,9 @@ from torch import nn
 from torch.nn import functional as F
 import torchvision
 from pl_bolts.metrics import precision_at_k
+from DLIP.models.zoo.necks.densecl_neck import DenseCLNeck
+
+from DLIP.models.zoo.necks.moco_v2_neck import Mocov2Neck
 
 class Mocov2(BaseComposition):
     """PyTorch Lightning implementation of `Moco <https://arxiv.org/abs/2003.04297>`_
@@ -28,44 +31,42 @@ class Mocov2(BaseComposition):
         self,
         base_encoder = 'resnet50',
         emb_dim: int = 128,
-        input_channels = 3,
         num_negatives: int = 34607, # queue length for negative training samples
         num_negatives_val: int = 8655, # queue length for negative validation samples 
         encoder_momentum: float = 0.999, # moco momentum of updating key encoder 
         softmax_temperature: float = 0.07,
-        use_mlp: bool = True,
+        neck='moco'
     ):
 
         super().__init__()
+        self.num_negatives = num_negatives
+        self.num_negatives_val = num_negatives_val
         
         self.softmax_temperature = softmax_temperature
         self.encoder_momentum = encoder_momentum
 
         # create the encoders
         # num_classes is the output fc dimension
-        self.encoder_q, self.encoder_k = self.init_encoders(base_encoder)
-        
-        self.encoder_q.conv1 = nn.Conv2d(
-            input_channels,
-            self.encoder_q.conv1.out_channels,
-            kernel_size=self.encoder_q.conv1.kernel_size,
-            stride=self.encoder_q.conv1.stride,
-            padding=self.encoder_q.conv1.padding,
-            bias=self.encoder_q.conv1.bias,
-            )
-        self.encoder_k.conv1 = nn.Conv2d(
-            input_channels,
-            self.encoder_k.conv1.out_channels,
-            kernel_size=self.encoder_k.conv1.kernel_size,
-            stride=self.encoder_k.conv1.stride,
-            padding=self.encoder_k.conv1.padding,
-            bias=self.encoder_k.conv1.bias,
-            )
+        self.encoder_q, self.encoder_k = self.init_encoders(base_encoder,emb_dim)
 
-        if use_mlp:  # hack: brute-force replacement
+        neck = neck.lower()
+        if neck == 'moco':  # hack: brute-force replacement
             dim_mlp = self.encoder_q.fc.weight.shape[1]
-            self.encoder_q.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_q.fc)
-            self.encoder_k.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_k.fc)
+            self.encoder_q.fc = nn.Identity()
+            self.encoder_q.avgpool = nn.Identity()
+            self.encoder_q = nn.Sequential(self.encoder_q, Mocov2Neck(dim_mlp=dim_mlp,emb_dim=emb_dim))
+            self.encoder_k.fc = nn.Identity()
+            self.encoder_k.avgpool = nn.Identity()
+            self.encoder_k = nn.Sequential(self.encoder_k, Mocov2Neck(dim_mlp=dim_mlp,emb_dim=emb_dim))
+        elif neck == 'densecl':
+            dim_mlp = self.encoder_q.fc.weight.shape[1]
+            self.encoder_q.fc = nn.Identity()
+            self.encoder_q.avgpool = nn.Identity()
+            self.encoder_q = nn.Sequential(self.encoder_q, DenseCLNeck(dim_mlp=dim_mlp,emb_dim=emb_dim))
+            self.encoder_k.fc = nn.Identity()
+            self.encoder_k.avgpool = nn.Identity()
+            self.encoder_k = nn.Sequential(self.encoder_k, DenseCLNeck(dim_mlp=dim_mlp,emb_dim=emb_dim))
+
 
         for param_q, param_k in zip(self.encoder_q.parameters(), self.encoder_k.parameters()):
             param_k.data.copy_(param_q.data)  # initialize
@@ -81,15 +82,15 @@ class Mocov2(BaseComposition):
         self.val_queue = nn.functional.normalize(self.val_queue, dim=0)
         self.register_buffer("val_queue_ptr", torch.zeros(1, dtype=torch.long))
 
-    def init_encoders(self, base_encoder):
+    def init_encoders(self, base_encoder,emb_dim):
         """Override to add your own encoders."""
 
         if hasattr(torchvision.models,base_encoder):
             template_model = getattr(torchvision.models, base_encoder)
         elif hasattr(DLIP.models.zoo.compositions,base_encoder):
             template_model = getattr(DLIP.models.zoo.compositions, base_encoder)
-        encoder_q = template_model(num_classes=self.hparams.emb_dim)
-        encoder_k = template_model(num_classes=self.hparams.emb_dim)
+        encoder_q = template_model(num_classes=emb_dim)
+        encoder_k = template_model(num_classes=emb_dim)
 
         return encoder_q, encoder_k
 
@@ -119,9 +120,9 @@ class Mocov2(BaseComposition):
         else:
             queue[:, ptr : ptr + batch_size] = keys.T
         if not val_step:
-            ptr = (ptr + batch_size) % self.hparams.num_negatives  # move pointer
+            ptr = (ptr + batch_size) % self.num_negatives  # move pointer
         else:
-            ptr = (ptr + batch_size) % self.hparams.num_negatives_val  # move pointer
+            ptr = (ptr + batch_size) % self.num_negatives_val  # move pointer
         queue_ptr[0] = ptr
 
     def forward(self, img_q, img_k, queue):
@@ -163,7 +164,6 @@ class Mocov2(BaseComposition):
         return logits, labels, k
 
     def training_step(self, batch, batch_idx):
-
         (img_1,img_2), (_) = batch
 
         self._momentum_update_key_encoder()  # update the key encoder
@@ -178,12 +178,6 @@ class Mocov2(BaseComposition):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        # in STL10 we pass in both lab+unl for online ft
-        if self.trainer.datamodule.name == "stl10":
-            # labeled_batch = batch[1]
-            unlabeled_batch = batch[0]
-            batch = unlabeled_batch
-
         (img_1, img_2), labels = batch
 
         output, target, keys = self(img_q=img_1, img_k=img_2, queue=self.val_queue)
