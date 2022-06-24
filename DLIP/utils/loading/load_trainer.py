@@ -1,6 +1,6 @@
 from argparse import Namespace
 from typing import Any
-from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from pytorch_lightning.trainer.trainer import Trainer
 
 from DLIP.utils.callbacks.callback_compose import CallbackCompose
@@ -17,7 +17,13 @@ def load_trainer(train_params: dict, result_dir: str, run_name: str, data:Any = 
     trainer_args = split_parameters(
         dict_to_config(train_params),["trainer"])["trainer"]
     
-    logger = TensorBoardLogger(
+
+    # logger = TensorBoardLogger(
+    #     save_dir=result_dir,
+    #     name=run_name,
+    # )
+
+    logger = WandbLogger(
         save_dir=result_dir,
         name=run_name,
     )
@@ -27,6 +33,6 @@ def load_trainer(train_params: dict, result_dir: str, run_name: str, data:Any = 
         **trainer_args,
         default_root_dir=result_dir,
         logger=logger,
-        callbacks=callbacks.get_composition()
+        callbacks=callbacks.get_composition(),
     )
     return instance

@@ -4,7 +4,7 @@ from albumentations.pytorch.transforms import ToTensorV2
 import numpy as np
 
 from DLIP.utils.data_preparation.norm_std_mean import norm_std_mean
-
+from DLIP.utils.data_preparation.norm_min_max import norm_min_max
 
 def list_transform(argument):
     return list(argument) if isinstance(argument,np.ndarray) else argument
@@ -40,7 +40,7 @@ class ImgSegProcessingPipeline:
     def make_val_aug_transform(self, params):
         self.trafo_dict["val_aug"] = self.make_aug_transform(params=params)
 
-    def make_pre_transform(self):
+    def make_pre_transform(self, consider_resize=True):
         transform = []
 
         if self.params.img_type == "mono_16_bit":
@@ -52,7 +52,7 @@ class ImgSegProcessingPipeline:
         elif self.params.img_type == "rgb_8_bit":
             self.params.max_value = 255.0
 
-        if hasattr(self.params, 'img_size'):
+        if hasattr(self.params, 'img_size') and consider_resize:
             transform.append(
                 A.Resize(height=self.params.img_size[0],
                          width=self.params.img_size[1])
@@ -278,6 +278,14 @@ class ImgSegProcessingPipeline:
         if self.trafo_dict["val_aug"] is not None:
              trafo_dict["aug"] = self.trafo_dict["val_aug"]
         return trafo_dict
+    
+    def get_test_transform(self):
+        trafo_dict = self.trafo_dict.copy()
+        if hasattr(self.params, 'test_resize'):
+            consider_resize = self.params.test_resize
+        trafo_dict["pre"] = self.make_pre_transform(consider_resize=False)
+        trafo_dict["aug"] = None
+        return trafo_dict
 
     def get_train_transform(self):
         trafo_dict = self.trafo_dict.copy()
@@ -322,9 +330,11 @@ class SemanticSegmentationProccesor:
             transformations = []
 
         if self.transform["norm"] is not None:
-            if self.transform["norm"]["type"]=="per_image":
+            if self.transform["norm"]["type"]=="per_image_mean_std":
                 sample_img = norm_std_mean(sample_img)
-            elif self.transform["norm"]["type"]=="per_dataset":
+            elif self.transform["norm"]["type"]=="per_image_min_max":
+                sample_img = norm_min_max(sample_img)
+            elif self.transform["norm"]["type"]=="per_dataset_mean_std":
                 sample_img = norm_std_mean(
                     sample_img, 
                     mean=self.transform["norm"]["params"]["mean"],

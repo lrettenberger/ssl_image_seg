@@ -14,21 +14,27 @@ model.params.in_channels:
 model.params.out_channels:
   value: 1
 model.params.encoder_type:
-  value: resnet50
+  value: unet
+model.params.decoder_type:
+  value: unet
+model.params.img_size:
+  value: 256
+model.params.num_classes:
+  value: 1
 model.params.pretraining_weights:
   #value: /home/ws/kg2371/projects/self-supervised-biomedical-image-segmentation/results/first-shot/IsicDermoDataModule/Mocov2/0029/dnn_weights.ckpt
   #value: /home/ws/kg2371/projects/self-supervised-biomedical-image-segmentation/results/first-shot/BaseInstanceSegmentationDataModule/SResUnet/0099/dnn_weights.ckpt
-  value: /home/ws/kg2371/projects/self-supervised-biomedical-image-segmentation/results/first-shot/IsicDermoDataModule/Mocov2/0056/dnn_weights-v9.ckpt
+  value: null
 model.params.encoder_frozen:
   value: true
-model.params.decoder_filters:
-  value: [512, 256, 128, 64, 32]
+# model.params.decoder_filters:
+#   value: [512, 256, 128, 64, 32]
 model.params.ae_mode:
   value: false
 model.params.imagenet_pretraing:
   value: false
 model.loss_fcn:
-  value: SmoothL1Loss
+  value: DiceLoss
 
 
 # Optimizer
@@ -78,7 +84,7 @@ data.datamodule.arguments.initial_labeled_ratio:
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
-  value: 16
+  value: 4
 
 # Callbacks Configuration
 train.callbacks.save_k_top_models:

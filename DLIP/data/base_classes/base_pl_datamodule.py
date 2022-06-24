@@ -110,9 +110,10 @@ class BasePLDataModule(pl.LightningDataModule):
             self.val_dataset,
             batch_size=self.batch_size,
             shuffle=False,
+            collate_fn=custom_collate,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
-            worker_init_fn=seed_worker
+            worker_init_fn=seed_worker,
         )
 
  
@@ -123,6 +124,7 @@ class BasePLDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
+            collate_fn=custom_collate,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
             worker_init_fn=seed_worker

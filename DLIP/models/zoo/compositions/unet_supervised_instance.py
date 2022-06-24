@@ -17,7 +17,7 @@ class UnetInstSegSupervised(BaseComposition):
         in_channels: int,
         out_channels: int,
         loss_fcn: nn.Module,
-        encoder_type = 'UNet',
+        encoder_type = 'unet',
         # encoder filters is not used if resnet is used as encoder
         encoder_filters: List = [64, 128, 256, 512, 1024],
         decoder_filters: List = [512, 256, 128, 64],
@@ -97,7 +97,7 @@ class UnetInstSegSupervised(BaseComposition):
         y_pred = self.forward(x)
         loss_n_c = self.loss_fcn(y_pred, y_true)
         loss = torch.mean(loss_n_c)
-        self.log("test/loss", loss, prog_bar=True, on_epoch=True, on_step=False)
+        self.log("test/dsc_score", 1-loss, prog_bar=True, on_epoch=True, on_step=False)
         return loss
 
     def log_imgs(self,x,y):

@@ -51,10 +51,11 @@ class LogBestMetricsCallback(Callback):
 
         for metric_name in self.metric_dict.keys():
             name = metric_name + "_best"
-            trainer.logger.experiment.add_scalar(
-                name, 
-                self.metric_dict[metric_name]["best"], 
-                global_step=trainer.global_step
+            trainer.logger.log_metrics({
+                f"{name}": 
+                self.metric_dict[metric_name]["best"]}, 
+                # step=trainer.global_step
             )
-        
+            
+
         trainer.final_scores = self.metric_dict
