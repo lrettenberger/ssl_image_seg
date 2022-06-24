@@ -62,23 +62,23 @@ class DetectronLogSemSegImgCallback(Callback):
             prediction_lst_ol.append(wandb.Image(y_inst_pred_rgb.copy(), caption=f"{ix+1}") )
             gt_lst_ol.append(wandb.Image(y_inst_gt_rgb.copy(), caption=f"{ix+1}"))
 
-            prediction_lst_ct.append(
-                wandb.Image(
-                    visualize_instances_map(img_resized,pred_mask),
-                    caption=f"{ix+1}")
-            )
+            # prediction_lst_ct.append(
+            #     wandb.Image(
+            #         visualize_instances_map(img_resized,pred_mask),
+            #         caption=f"{ix+1}")
+            # )
             
-            gt_lst_ct.append(
-                wandb.Image(
-                    visualize_instances_map(img_resized,gt_mask),
-                    caption=f"{ix+1}")
-            )
+            # gt_lst_ct.append(
+            #     wandb.Image(
+            #         visualize_instances_map(img_resized,gt_mask),
+            #         caption=f"{ix+1}")
+            # )
 
         wandb.log({
             f"test/pred_overlay": prediction_lst_ol, 
-            f"test/pred_contour": prediction_lst_ct, 
+            # f"test/pred_contour": prediction_lst_ct, 
             f"test/gt_overlay": gt_lst_ol, 
-            f"test/gt_contour": gt_lst_ct
+            # f"test/gt_contour": gt_lst_ct
         })
 
         trainer.datamodule.test_dataset.label_raw_mode = False
