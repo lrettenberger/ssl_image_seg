@@ -9,6 +9,8 @@ from DLIP.utils.callbacks.image_inst_seg_log import ImageLogInstSegCallback
 from DLIP.utils.callbacks.log_instance_seg_metrics import LogInstSegMetricsCallback
 from DLIP.utils.callbacks.increase_ssl_img_size import IncreaseSSLImageSizeCallback
 
+from DLIP.utils.callbacks.unet_log_instance_seg_img import UNetLogInstSegImgCallback
+
 from DLIP.utils.callbacks.detectron_log_instance_seg_metrics import DetectronLogInstSegMetricsCallback
 from DLIP.utils.callbacks.detectron_log_instance_seg_img import DetectronLogInstSegImgCallback
 from DLIP.utils.callbacks.detectron_log_sem_seg_img import DetectronLogSemSegImgCallback
@@ -89,6 +91,13 @@ class CallbackCompose:
             self.callback_lst.append(
                 IncreaseSSLImageSizeCallback(increase_factor=factor)
             )
+
+        # UNet Callbacks
+        if hasattr(self.params, 'unet_inst_seg_img_log_enabled') and self.params.unet_inst_seg_img_log_enabled:
+            self.callback_lst.append(
+                UNetLogInstSegImgCallback()
+            )    
+        
 
         # Detectron Callbacks
         if hasattr(self.params, 'detectron_inst_seg_metrics_log_enabled') and self.params.detectron_inst_seg_metrics_log_enabled:

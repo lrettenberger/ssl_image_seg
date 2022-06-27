@@ -35,7 +35,7 @@ model.params.sem_seg_head.num_classes:
 
 # Trainer Configuration
 train.trainer.max_epochs:
-  value: 200
+  value: 1
 train.trainer.num_sanity_val_steps:
   value: 0
 train.trainer.gpus:
@@ -53,15 +53,15 @@ data.datamodule.root_dirs:
     horeka: /lsdf/kit/iai/projects/iai-aida/Daten_Schilling/datasets/2017_ISIC_Derma
     horkea_local: /home/hk-project-sppo/sc1357/data/2017_ISIC_Derma_filter
 data.datamodule.device:
-  value: horkea_local
+  value: local
 data.datamodule.arguments.n_classes:
   value: 1
 data.datamodule.arguments.dataset_size:
-  value: 1.0
+  value: 0.01
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
-  value: 8
+  value: 4
 data.datamodule.arguments.num_workers:
   value: 19
 data.datamodule.arguments.label_suffix:
@@ -82,13 +82,13 @@ train.callbacks.log_best_metric_dict:
   value: {"val/loss":"min"}
 train.callbacks.epoch_duration_enabled:
   value: true
-train.callbacks.detectron_sem_seg_img_log_enabled:
-  value: true
+# train.callbacks.detectron_sem_seg_img_log_enabled:
+#   value: true
   
 
 # General Augmentations
-data.img_processing.norm_type:
-  value: per_image_mean_std
+# data.img_processing.norm_type:
+#   value: per_image_mean_std
 data.img_processing.img_type:
   value: rgb_8_bit
 data.img_processing.replay_processing_pipeline:

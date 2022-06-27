@@ -17,12 +17,17 @@ from detectron2.engine import (
     hooks,
 )
 
+import torch
+
 import numpy as np
 
 from detectron2.modeling import build_model
 from detectron2.checkpoint import DetectionCheckpointer
-from detectron2.solver import build_lr_scheduler, build_optimizer
+from detectron2.solver import build_lr_scheduler, get_default_optimizer_params 
+from detectron2.solver.build import maybe_add_gradient_clipping
 from detectron2.utils.events import EventStorage
+
+
 
 from torchmetrics.detection.map import MAP
 
@@ -72,7 +77,8 @@ class Detectron2Instance(pl.LightningModule):
         if not isinstance(batch, List):
             batch = [batch]
         
-        prediction = self.model(batch)
+        with torch.no_grad():
+            prediction = self.model(batch)
 
         if self.cfg["MODEL"]["MASK_ON"]:
             val_metric = calc_instance_metric(batch, prediction)
@@ -85,7 +91,8 @@ class Detectron2Instance(pl.LightningModule):
         if not isinstance(batch, List):
             batch = [batch]
         
-        prediction = self.model(batch)
+        with torch.no_grad():
+            prediction = self.model(batch)
 
         if self.cfg["MODEL"]["MASK_ON"]:
             test_metric = calc_instance_metric(batch, prediction)
@@ -190,6 +197,7 @@ def calc_instance_metric(batch, prediction):
         gt_mask = get_mask_encoding(batch[i_b]["instances"].gt_masks.tensor)
         pred_mask = get_mask_encoding(prediction[i_b]["instances"].pred_masks)
         metric.append(get_fast_aji_plus(remap_label(gt_mask),remap_label(pred_mask)))
+        
     return np.mean(metric)
 
 def get_mask_encoding(tensor):
@@ -198,3 +206,21 @@ def get_mask_encoding(tensor):
         mask[tensor[i_i].detach().cpu().numpy()] =  i_i + 1
 
     return mask
+
+def build_optimizer(cfg: CfgNode, model: torch.nn.Module) -> torch.optim.Optimizer:
+    """
+    Build an optimizer from config.
+    """
+    params = get_default_optimizer_params(
+        model,
+        base_lr=cfg.SOLVER.BASE_LR,
+        weight_decay_norm=cfg.SOLVER.WEIGHT_DECAY_NORM,
+        bias_lr_factor=cfg.SOLVER.BIAS_LR_FACTOR,
+        weight_decay_bias=cfg.SOLVER.WEIGHT_DECAY_BIAS,
+    )
+
+    return maybe_add_gradient_clipping(cfg, torch.optim.Adam)(
+        params,
+        lr=cfg.SOLVER.BASE_LR,
+        weight_decay=cfg.SOLVER.WEIGHT_DECAY,
+    )

@@ -27,9 +27,9 @@ experiment.seed:
 model.name:
   value: Detectron2Instance
 model.params.roi_heads.score_thresh_test:
-  value: 0.3
+  value: 0.5
 model.params.sub_batch_size:
-  value: 64
+  value: 256
 model.params.base_lr:
   value: 0.0001
 
@@ -53,7 +53,7 @@ data.datamodule.root_dirs:
     horeka: 
     horeka_local: /home/hk-project-sppo/sc1357/data/2018_MoNuSeg_cropped
 data.datamodule.device:
-  value: horeka_local
+  value: local
 data.datamodule.arguments.dataset_size:
   value: 1.0
 data.datamodule.arguments.val_to_train_ratio:
@@ -61,7 +61,7 @@ data.datamodule.arguments.val_to_train_ratio:
 data.datamodule.arguments.batch_size:
   value: 2
 data.datamodule.arguments.num_workers:
-  value: 1
+  value: 12
 data.datamodule.arguments.label_suffix:
   value: ""
 
@@ -92,7 +92,7 @@ data.img_processing.img_type:
 data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:
-  value: [256,256]
+  value: [800,800]
 data.img_processing.test_resize:
   value: false
 
@@ -132,7 +132,7 @@ data.img_processing.aug1.aug_rand_brightness_contrast_contrast_limit:
 data.img_processing.aug1.random_resized_propability:
   value: 0.5
 data.img_processing.aug1.random_resized_crop_size:
-  value: [256, 256]
+  value: [800, 800]
 data.img_processing.aug1.random_resized_scale:
   value: [0.75, 1.0]
 data.img_processing.aug1.random_resized_ratio:

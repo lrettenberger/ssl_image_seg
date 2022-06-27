@@ -6,6 +6,7 @@ MODEL:
   MASK_ON: true
   BACKBONE:
       NAME: "build_resnet_fpn_backbone"
+      FREEZE_AT: 0
   RESNETS:
     OUT_FEATURES: ["res2", "res3", "res4", "res5"]
   FPN:
@@ -16,30 +17,30 @@ MODEL:
   RPN:
     IN_FEATURES: ["p2", "p3", "p4", "p5", "p6"]
     IOU_THRESHOLDS: [0.3, 0.7]
-    PRE_NMS_TOPK_TRAIN: 1000 # Per FPN level
-    PRE_NMS_TOPK_TEST: 1000  # Per FPN level
-    BATCH_SIZE_PER_IMAGE: 128 # 8 #16
-    # NMS_THRESH: 0.3
+    # PRE_NMS_TOPK_TRAIN: 12000 #1000 # Per FPN level
+    PRE_NMS_TOPK_TEST: 10000 #1000  # Per FPN level
+    # BATCH_SIZE_PER_IMAGE: 64 # 8 #16
+    #NMS_THRESH: 0.1
     #BBOX_REG_LOSS_TYPE: "diou"
     # Detectron1 uses 2000 proposals per-batch,
     # (See "modeling/rpn/rpn_outputs.py" for details of this legacy issue)
     # which is approximately 1000 proposals per-image since the default batch size for FPN is 2.
-    POST_NMS_TOPK_TRAIN: 1000
-    POST_NMS_TOPK_TEST: 1000
+    POST_NMS_TOPK_TRAIN: 2000 #1000
+    POST_NMS_TOPK_TEST: 10000 #1000
   ROI_HEADS:
     NAME: "StandardROIHeads"
     IN_FEATURES: ["p2", "p3", "p4", "p5"]
-    NMS_THRESH_TEST:  1.0 # no overlapping objects
-    SCORE_THRESH_TEST: 0.2
+    NMS_THRESH_TEST:  0.1 # no overlapping objects
+    SCORE_THRESH_TEST: 0.5
     NUM_CLASSES: 1
-    BATCH_SIZE_PER_IMAGE: 256 #16 #32
+    BATCH_SIZE_PER_IMAGE: 64 #16 #32
     POSITIVE_FRACTION: 0.25
   ROI_BOX_HEAD:
     NAME: "FastRCNNConvFCHead"
     NUM_FC: 2
     BBOX_REG_LOSS_WEIGHT: 1.0
     BBOX_REG_WEIGHTS: (10.0, 10.0, 5.0, 5.0) # (1.0, 1.0, 1.0, 1.0) 
-    #CLS_AGNOSTIC_BBOX_REG: true
+    CLS_AGNOSTIC_BBOX_REG: true
     POOLER_RESOLUTION: 7
   ROI_MASK_HEAD:
     NAME: "MaskRCNNConvUpsampleHead"
