@@ -13,3 +13,5 @@ from .custom_resnet import CustomResnet
 from .resnet_classifier import ResnetClassifier
 from .detectron_instance import Detectron2Instance
 from .detectron_semantic import Detectron2Semantic
+from .detco_resnet import resnet50_DetCo
+from .det_co import DetCo

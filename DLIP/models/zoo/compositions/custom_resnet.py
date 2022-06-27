@@ -1,6 +1,6 @@
 from torchvision.models import ResNet
 from torchvision.models.resnet import Bottleneck, _resnet, model_urls
-from torchvision.models.utils import load_state_dict_from_url
+from torchvision._internally_replaced_utils import load_state_dict_from_url
 
 class CustomResnet(ResNet):
 
