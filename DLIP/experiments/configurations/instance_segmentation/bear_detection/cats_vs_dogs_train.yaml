@@ -14,13 +14,15 @@ model.params.in_channels:
 model.params.out_channels:
   value: 1
 model.params.encoder_type:
-  value: resnet50
+  value: unet
+model.params.decoder_type:
+  value: unet
   #value: unet
 model.params.pretraining_weights:
    #value: /home/ws/kg2371/projects/self-supervised-biomedical-image-segmentation/results/first-shot/BearDetectionDataModule/Mocov2/0103/dnn_weights-v8.ckpt
-   value: /home/ws/kg2371/Downloads/densecl.ckpt
+   #value: /home/ws/kg2371/Downloads/densecl.ckpt
    #value: imagenet
-  # value: null
+    value: null
 model.params.encoder_frozen:
   value: true
 model.params.decoder_filters:
@@ -31,8 +33,6 @@ model.params.imagenet_pretraing:
   value: false
 model.loss_fcn:
   value: DiceLoss
-model.params.decoder_type:
-  value: fcn
 model.params.img_size:
   value: 256
 model.params.num_classes:
