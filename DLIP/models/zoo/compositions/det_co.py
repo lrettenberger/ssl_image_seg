@@ -37,7 +37,7 @@ class DetCo(Mocov2):
         num_negatives_val: int = 8655,
         encoder_momentum: float = 0.999,
         softmax_temperature: float = 0.07,
-        neck='moco',
+        neck='',
         loss_weights = [0.1, 0.4, 0.7, 1.0]
         ):
         super().__init__(base_encoder, emb_dim, num_negatives, num_negatives_val, encoder_momentum, softmax_temperature, neck)

@@ -6,11 +6,19 @@ experiment.seed:
 
 # Model Configuration
 model.name:
-  value: DenseCL
+  #value: SimCLR
+  #value: BarlowTwins
+  #value: BYOL
+  #value: Mocov2
+  #value: DenseCL
+  #value: MoDeCo
+
+  #value: DetCo -> NO
 model.params.num_negatives:
   value: 1600
 model.params.num_negatives_val:
   value: 400
+
 
 # Optimizer
 model.optimizer.type:
@@ -53,7 +61,7 @@ data.datamodule.arguments.initial_labeled_ratio:
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
-  value: 100
+  value: 25
 data.datamodule.arguments.dataset_size:
   value: 1.0
 
@@ -81,7 +89,7 @@ data.img_processing.img_type:
 data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:
-  value: [128,128]
+  value: [256, 256]
 
 # Augmentations
 data.img_processing.aug1.replay_processing_pipeline:
@@ -91,7 +99,7 @@ data.img_processing.aug1.replay_processing_pipeline:
 data.img_processing.aug1.random_resized_propability:
   value: 1.0
 data.img_processing.aug1.random_resized_crop_size:
-  value: [128, 128]
+  value: [256, 256]
 data.img_processing.aug1.random_resized_scale:
   value: [0.2, 1.0]
 data.img_processing.aug1.random_resized_ratio:
@@ -128,7 +136,7 @@ data.img_processing.aug1.aug_flip_prob:
 data.img_processing.aug2.random_resized_propability:
   value: 1.0
 data.img_processing.aug2.random_resized_crop_size:
-  value: [128, 128]
+  value: [256, 256]
 data.img_processing.aug2.random_resized_scale:
   value: [0.2, 1.0]
 data.img_processing.aug2.random_resized_ratio:
@@ -164,7 +172,7 @@ data.img_processing.aug2.aug_flip_prob:
 data.img_processing.validation_aug.random_resized_propability:
   value: 1.0
 data.img_processing.validation_aug.random_resized_crop_size:
-  value: [128, 128]
+  value: [256, 256]
 data.img_processing.validation_aug.random_resized_scale:
   value: [0.75, 1.0]
 data.img_processing.validation_aug.random_resized_ratio:
