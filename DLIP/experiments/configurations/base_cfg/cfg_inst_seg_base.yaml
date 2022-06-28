@@ -59,7 +59,7 @@ data.datamodule.arguments.dataset_size:
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
-  value: 2
+  value: 4
 data.datamodule.arguments.num_workers:
   value: 12
 data.datamodule.arguments.label_suffix:
@@ -92,9 +92,9 @@ data.img_processing.img_type:
 data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:
-  value: [800,800]
+  value: [1024,1024]
 data.img_processing.test_resize:
-  value: false
+  value: [4000,4000]
 
 # Augmentations
 data.img_processing.aug1.replay_processing_pipeline:

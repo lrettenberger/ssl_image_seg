@@ -1,22 +1,32 @@
-import os
-import wandb
+import cv2
 import logging
 from pytorch_lightning.utilities.seed import seed_everything
 
 from DLIP.utils.loading.initialize_wandb import initialize_wandb
 from DLIP.utils.loading.load_data_module import load_data_module
 from DLIP.utils.loading.load_model import load_model
-from DLIP.utils.loading.load_trainer import load_trainer
 from DLIP.utils.loading.merge_configs import merge_configs
-from DLIP.utils.loading.prepare_directory_structure import prepare_directory_structure
 
 from DLIP.utils.loading.split_parameters import split_parameters
-from DLIP.utils.cross_validation.cv_trainer import CVTrainer
+from torchvision.transforms import functional as F
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import matplotlib.pyplot as plt
+from DLIP.utils.metrics.inst_seg_metrics import get_fast_aji_plus, remap_label
+from skimage.transform import resize
+
+def get_mask_encoding(tensor):
+    mask = np.zeros((tensor.shape[1:]), dtype=np.int16)
+    for i_i in range(tensor.shape[0]):
+        mask[tensor[i_i].detach().cpu().numpy()] =  i_i + 1
+    return mask
 
 logging.basicConfig(level=logging.INFO)
-logging.info("Initalizing model")
 
-config_files = "/home/ws/sc1357/projects/devel/src/detectron/DLIP/experiments/configurations/base_cfg/cfg_inst_seg_base.yaml"
+config_files    = "/home/ws/sc1357/projects/devel/src/self-supervised-biomedical-image-segmentation/DLIP/experiments/configurations/base_cfg/cfg_inst_seg_base.yaml"
+ckpt_file       = "/home/ws/sc1357/data/0556/dnn_weights.ckpt"
 
 cfg_yaml = merge_configs(config_files)
 experiment_name=cfg_yaml['experiment.name']['value']
@@ -28,24 +38,30 @@ config = initialize_wandb(
     disabled=True
 )
 
-seed_everything(seed=cfg_yaml['experiment.seed']['value'])
+seed_everything(seed=config['experiment.seed'])
 parameters_splitted = split_parameters(config, ["model", "train", "data"])
 
-model = load_model(parameters_splitted["model"],  checkpoint_path_str="/home/ws/sc1357/data/inst_seg_tests/first-shot/DetectronDataModule/Detectron2/0009/dnn_weights.ckpt")
+data = load_data_module(parameters_splitted["data"], do_val_init=False)
+model = load_model(parameters_splitted["model"], checkpoint_path_str=ckpt_file)
 
+metric = list()
 
-import tifffile
-
-img = tifffile.imread("/home/ws/sc1357/data/2022_DMA_Spheroid_Detection_split/train/samples/A945_spot_row_15_col05.tif")
-
-
-import torch
-model.model.eval()
 model.model.training = False
-img_dict = dict()
-img_dict["image"] = torch.from_numpy(img).permute(2,0,1)
-input = [img_dict]
+model.model.eval()
 
-res = model.model(input)
+for sample in data.test_dataset:
+    input = [sample]
+    resized_img = F.resize(sample["image"], (4000,4000)).to("cpu")
+    input[0]["image"] = resized_img
 
-print(res)
+    res = model.model(input)
+
+    pred_mask = get_mask_encoding(res[0]["instances"].pred_masks)
+    gt_mask = get_mask_encoding(input[0]["instances"].gt_masks.tensor)
+
+    metric.append(get_fast_aji_plus(
+        remap_label(gt_mask),
+        remap_label(cv2.resize(pred_mask,(1000,1000),interpolation=cv2.INTER_NEAREST))
+    ))
+
+print(f"Final score: {np.mean(metric)}")

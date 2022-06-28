@@ -52,12 +52,18 @@ class ImgSegProcessingPipeline:
         elif self.params.img_type == "rgb_8_bit":
             self.params.max_value = 255.0
 
-        if hasattr(self.params, 'img_size') and consider_resize:
-            transform.append(
-                A.Resize(height=self.params.img_size[0],
-                         width=self.params.img_size[1])
-            )
-
+        if hasattr(self.params, 'img_size'):
+            if isinstance(consider_resize, bool):
+                if consider_resize:
+                    transform.append(
+                        A.Resize(height=self.params.img_size[0],
+                                width=self.params.img_size[1])
+                    )
+            else:
+                transform.append(
+                        A.Resize(height=consider_resize[0],
+                                width=consider_resize[1])
+                    )
         return self.get_transform(transform, replay=False)
 
     def make_aug_transform(self,params=None):
