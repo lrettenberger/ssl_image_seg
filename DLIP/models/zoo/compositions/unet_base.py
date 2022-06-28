@@ -57,12 +57,11 @@ class UnetBase(BaseComposition):
                 ae_mode = ae_mode
             ))
         elif decoder_type == 'fcn':
-            if 'img_size' not in kwargs or 'num_classes' not in kwargs:
+            if 'img_size' not in kwargs:
                 raise Exception('Not enough params for fcn decoder! Aborting')
             self.append(FCNDecoder(kwargs['img_size'], out_channels))
 
-        self.append(nn.Sigmoid())
- 
+
     def training_step(self, batch, batch_idx):
         x, y_true = batch
         y_true = y_true.permute(0, 3, 1, 2)

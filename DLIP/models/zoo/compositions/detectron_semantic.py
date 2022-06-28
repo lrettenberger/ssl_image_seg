@@ -31,7 +31,6 @@ from DLIP.utils.metrics.seg_metrics import get_dsc
 
 from argparse import Namespace
 
-
 import pytorch_lightning as pl
 
 from DLIP.models.zoo.compositions.detectron_instance import setup
@@ -122,7 +121,7 @@ class Detectron2Semantic(pl.LightningModule):
         gt      = torch.stack([elem["sem_seg"] for elem in batch]).unsqueeze(1)
         
         test_metric = get_dsc(pred, gt)
-        self.log("test/dsc_score", test_metric)
+        self.log("test/score", test_metric)
 
 
     def configure_optimizers(self):
