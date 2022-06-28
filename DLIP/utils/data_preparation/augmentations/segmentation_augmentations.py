@@ -287,10 +287,9 @@ class ImgSegProcessingPipeline:
     
     def get_test_transform(self):
         trafo_dict = self.trafo_dict.copy()
+        consider_resize = True
         if hasattr(self.params, 'test_resize'):
             consider_resize = self.params.test_resize
-        else:
-            consider_resize = False
         trafo_dict["pre"] = self.make_pre_transform(consider_resize=consider_resize)
         trafo_dict["aug"] = None
         return trafo_dict
