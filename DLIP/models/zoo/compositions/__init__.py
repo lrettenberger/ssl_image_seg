@@ -16,3 +16,4 @@ from .detco_resnet import resnet50_DetCo
 from .det_co import DetCo
 from .MoDeCo import MoDeCo
 from .unet_instance import UnetInstance
+from .simclr import SimCLR
