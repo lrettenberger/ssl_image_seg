@@ -17,3 +17,5 @@ from .det_co import DetCo
 from .MoDeCo import MoDeCo
 from .unet_instance import UnetInstance
 from .simclr import SimCLR
+from .barlow_twins import BarlowTwins
+from .byol import BYOL

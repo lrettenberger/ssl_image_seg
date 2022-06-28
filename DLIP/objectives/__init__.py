@@ -3,3 +3,5 @@
 """
 from .dice_loss import DiceLoss
 from .ntxent_loss import *
+from .cross_correlation_loss import CrossCorrelationLoss
+from .byol_loss import BYOLLoss
