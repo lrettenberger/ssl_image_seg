@@ -37,6 +37,7 @@ dependencies:
     - umap==0.1.1
     - umap-learn==0.5.1
     - wandb==0.12.6
+    - einops==0.4.1
     - tables==3.7.0
     - setuptools==59.5.0
     - segmentation-models-pytorch==0.2.1

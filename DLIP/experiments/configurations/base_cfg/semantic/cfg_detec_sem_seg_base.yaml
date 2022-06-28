@@ -25,53 +25,11 @@ experiment.seed:
 
 # Model Configuration
 model.name:
-  value: UnetInstSegSupervised
-model.params.input_height:
-  value: 256
-model.params.in_channels:
-  value: 3
-model.params.out_channels:
-  value: 1
-model.params.encoder_type:
-  value: resnet50
-model.params.decoder_type:
-  value: unet
-model.params.img_size:
-  value: 256
-model.params.num_classes:
-  value: 1
-model.params.decoder_filters:
-  value: [512, 256, 128, 64, 32]
-model.params.pretraining_weights:
-  value: null
-model.params.encoder_frozen:
-  value: false
-model.params.ae_mode:
-  value: false
-model.params.imagenet_pretraing:
-  value: false
-model.loss_fcn:
-  value: DiceLoss
-
-
-# Optimizer
-model.optimizer.type:
-  value: Adam
-model.optimizer.params.lr:
+  value: Detectron2Semantic
+model.params.base_lr:
   value: 0.001
-# LR Scheduler
-model.optimizer.lrs.type:
-  value: ReduceLROnPlateau
-model.optimizer.lrs.params.factor:
-  value: 0.5
-model.optimizer.lrs.params.patience:
-  value: 5
-model.optimizer.lrs.params.verbose:
-  value: false
-model.optimizer.lrs.params.cooldown:
-  value: 0
-model.optimizer.lrs.params.min_lr:
-  value: 0.00001
+model.params.sem_seg_head.num_classes:
+  value: 1
 
 # Trainer Configuration
 train.trainer.max_epochs:
@@ -85,22 +43,29 @@ train.trainer.reload_dataloaders_every_epoch:
 
 # Data Configuration
 data.datamodule.name:
-  value: IsicDermoDataModule
+  value: DetectronSemanticSegmentationDataModule
 data.datamodule.root_dirs:
   value: 
     local: /home/ws/sc1357/data/2017_ISIC_Derma/
     iai_gpu: 
+    horeka: /lsdf/kit/iai/projects/iai-aida/Daten_Schilling/datasets/2017_ISIC_Derma
     horkea_local: /home/hk-project-sppo/sc1357/data/2017_ISIC_Derma_filter
 data.datamodule.device:
   value: horkea_local
+data.datamodule.arguments.n_classes:
+  value: 1
 data.datamodule.arguments.dataset_size:
   value: 1.0
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
-  value: 8
+  value: 2
 data.datamodule.arguments.num_workers:
-  value: 6
+  value: 19
+data.datamodule.arguments.label_suffix:
+  value: "_segmentation"
+data.datamodule.arguments.map_look_up:
+  value: {0: 255}
 
 # Callbacks Configuration
 train.callbacks.save_k_top_models:
@@ -127,7 +92,7 @@ data.img_processing.img_type:
 data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:
-  value: [256,256]
+  value: [512,512]
 data.img_processing.test_resize:
   value: true
 

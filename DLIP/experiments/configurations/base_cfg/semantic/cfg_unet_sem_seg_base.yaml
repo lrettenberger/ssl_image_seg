@@ -25,19 +25,13 @@ experiment.seed:
 
 # Model Configuration
 model.name:
-  value: UnetInstSegSupervised
-model.params.input_height:
-  value: 256
+  value: UnetSemantic
 model.params.in_channels:
   value: 3
-model.params.out_channels:
-  value: 1
 model.params.encoder_type:
   value: unet
 model.params.decoder_type:
   value: unet
-model.params.img_size:
-  value: 256
 model.params.num_classes:
   value: 1
 model.params.pretraining_weights:
@@ -45,8 +39,6 @@ model.params.pretraining_weights:
 model.params.encoder_frozen:
   value: false
 model.params.ae_mode:
-  value: false
-model.params.imagenet_pretraing:
   value: false
 model.loss_fcn:
   value: DiceLoss
@@ -113,9 +105,6 @@ train.callbacks.log_best_metric_dict:
   value: {"val/loss":"min"}
 train.callbacks.epoch_duration_enabled:
   value: true
-# train.callbacks.detectron_sem_seg_img_log_enabled:
-#   value: true
-  
 
 # General Augmentations
 data.img_processing.norm_type:
@@ -125,7 +114,7 @@ data.img_processing.img_type:
 data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:
-  value: [512,512]
+  value: [256,256]
 data.img_processing.test_resize:
   value: true
 
