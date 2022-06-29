@@ -5,6 +5,7 @@ import torch.nn as nn
 from torch import Tensor
 from einops import rearrange
 from torchvision import transforms
+import torchvision.transforms.functional as F
 
 try:
     from torch.hub import load_state_dict_from_url
@@ -261,6 +262,8 @@ class ResNet(nn.Module):
         return x[:, :, i:i+ch, j:j+cw]
 
     def _jigsaw(self, x, nh=3, nw=3):
+
+        x = F.resize(x,(258,258))
     
         _, _, h, w = x.size()
         assert h % nh == 0 and w % nw == 0, f'jigsaw error: {h} or {w} is not divisible by {nh} or {nw}'
