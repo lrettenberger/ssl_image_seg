@@ -9,7 +9,7 @@ import torchvision
 
 class BarlowTwinsProjection(nn.Module):
     
-    def __init__(self, in_dims = 2048, h_dims = 2048, out_dims = 2048):
+    def __init__(self, in_dims = 2048, h_dims = 2048, out_dims = 2048,**kwargs):
         super().__init__()
 
         l1 = nn.Sequential(nn.Linear(in_dims, h_dims),

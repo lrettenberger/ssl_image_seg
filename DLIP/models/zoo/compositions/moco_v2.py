@@ -35,7 +35,8 @@ class Mocov2(BaseComposition):
         num_negatives_val: int = 8655, # queue length for negative validation samples 
         encoder_momentum: float = 0.999, # moco momentum of updating key encoder 
         softmax_temperature: float = 0.07,
-        neck='moco'
+        neck='moco',
+        **kwargs
     ):
 
         super().__init__()
@@ -53,10 +54,10 @@ class Mocov2(BaseComposition):
         if neck == 'moco':  # hack: brute-force replacement
             dim_mlp = self.encoder_q.fc.weight.shape[1]
             self.encoder_q.fc = nn.Identity()
-            self.encoder_q.avgpool = nn.Identity()
+            #self.encoder_q.avgpool = nn.Identity()
             self.encoder_q = nn.Sequential(self.encoder_q, Mocov2Neck(dim_mlp=dim_mlp,emb_dim=emb_dim))
             self.encoder_k.fc = nn.Identity()
-            self.encoder_k.avgpool = nn.Identity()
+            #self.encoder_k.avgpool = nn.Identity()
             self.encoder_k = nn.Sequential(self.encoder_k, Mocov2Neck(dim_mlp=dim_mlp,emb_dim=emb_dim))
         elif neck == 'densecl':
             dim_mlp = self.encoder_q.fc.weight.shape[1]

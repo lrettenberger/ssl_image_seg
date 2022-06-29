@@ -8,7 +8,7 @@ class Mocov2Neck(nn.Module):
         self,
         emb_dim,
         dim_mlp,
-        with_avg_pool=True
+        with_avg_pool=False
         ):
         super().__init__()
         if with_avg_pool:

@@ -12,7 +12,7 @@ import DLIP
 
 class SimClrProjection(nn.Module):
     
-    def __init__(self, input_dim=2048, hidden_dim=1024, output_dim=128):
+    def __init__(self, input_dim=2048, hidden_dim=1024, output_dim=128,**kwargs):
         super().__init__()
         self.output_dim = output_dim
         self.input_dim = input_dim
