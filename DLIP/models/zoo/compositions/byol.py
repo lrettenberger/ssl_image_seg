@@ -32,7 +32,7 @@ class MLP(nn.Module):
 
 
 class BYOLProjection(nn.Module):
-    def __init__(self, encoder, encoder_out_dim=2048, projector_hidden_size=4096, projector_out_dim=256):
+    def __init__(self, encoder, encoder_out_dim=2048, projector_hidden_size=4096, projector_out_dim=256,**kwargs):
         super().__init__()
 
         # Encoder
