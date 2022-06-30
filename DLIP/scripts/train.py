@@ -47,7 +47,7 @@ parameters_splitted = split_parameters(config, ["model", "train", "data"])
 model = load_model(parameters_splitted["model"])
 data = load_data_module(parameters_splitted["data"])
 
-trainer = load_trainer(parameters_splitted['train'], experiment_dir, wandb.run.name, data)
+trainer = load_trainer(train_params=parameters_splitted['train'], result_dir=experiment_dir, run_name=wandb.run.name, data=data,config=config)
 
 if 'train.cross_validation.n_splits' in cfg_yaml:
     cv_trainer = CVTrainer(

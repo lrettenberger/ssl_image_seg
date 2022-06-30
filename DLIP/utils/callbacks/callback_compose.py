@@ -1,5 +1,6 @@
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
+from DLIP.utils.callbacks.advanced_model_checkpoint import AdvancedModelCheckpoint
 
 from DLIP.utils.callbacks.epoch_duration_log import EpochDurationLogCallback
 from DLIP.utils.callbacks.log_best_metric import LogBestMetricsCallback
@@ -22,11 +23,13 @@ class CallbackCompose:
     def __init__(
         self,
         params,
-        data
+        data,
+        config
     ):
         self.params = params
         self.callback_lst = None
         self.data = data
+        self.config = config
         self.make_composition()
 
     def make_composition(self):
@@ -36,11 +39,12 @@ class CallbackCompose:
             self.weights_dir = self.params.experiment_dir
             self.weights_name = 'dnn_weights'
             self.callback_lst.append(
-                ModelCheckpoint(
+                AdvancedModelCheckpoint(
                     filename = self.weights_name,
                     dirpath = self.weights_dir,
                     save_top_k=self.params.save_k_top_models,
-                    monitor='val/loss'
+                    monitor='val/loss',
+                    config=self.config
                 )
             )
 
