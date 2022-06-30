@@ -17,7 +17,8 @@ class ResNetEncoder(BasicEncoder):
         encoder_type = 'resnet50',
         pretraining_weights = 'imagenet',
         encoder_frozen=False,
-        classification_output = False
+        classification_output = False,
+        min_number_of_weights = 250
     ):
         super().__init__(input_channels,classification_output)
         load_imagenet = False
@@ -25,6 +26,7 @@ class ResNetEncoder(BasicEncoder):
             load_imagenet = True
         encoder_class = None
         weights = None
+        load_weights_directly_into_encoder = False
         encoder_type = encoder_type.lower()
         # Its a resnet encoder!
         if encoder_type == 'resnet18':
@@ -78,37 +80,75 @@ class ResNetEncoder(BasicEncoder):
                     for key in encoder_q_keys:
                         filtered_weights[key.replace('module.encoder_q.','')] = weights[key]
                     weights = filtered_weights
+                elif 'encoder_q.0.backbone.3.0.conv1.weight' in weights:
+                    load_weights_directly_into_encoder = True
+                    encoder_q_keys = [x for x in weights.keys() if 'encoder_q.0.backbone.' in x]
+                    filtered_weights = {}
+                    for key in encoder_q_keys:
+                        filtered_weights[key.replace('encoder_q.0.backbone.','')] = weights[key]
+                    weights = filtered_weights
                 elif 'encoder' in weights:
                     for key in list(weights.keys()):
                         weights[key.replace('encoder.','')] = weights[key]
                         del weights[key]
-                missing_keys,unmatched_keys = encoder.load_state_dict(weights,strict=False)
+                if not load_weights_directly_into_encoder:
+                    missing_keys,unmatched_keys = encoder.load_state_dict(weights,strict=False)
+                    logging.info(f'Missing Keys: {missing_keys}.')
+                    logging.info(f'Unmatched Keys: {unmatched_keys}.')
+                    logging.info(f'Loaded weights.')
+            if not load_weights_directly_into_encoder:
+                if encoder_frozen:
+                    if weights is not None:
+                        for n, p in encoder.named_parameters():
+                                if  n in weights:
+                                    p.requires_grad = False
+                    elif load_imagenet:
+                        for n, p in encoder.named_parameters():
+                            if 'fc' not in n:
+                                p.requires_grad = False
+                    else:
+                        for n, p in encoder.named_parameters():
+                            if 'fc' not in n:
+                                p.requires_grad = False
+                    logging.info('Unfrozen Layers:')
+                    for n, p in encoder.named_parameters():
+                            if p.requires_grad:
+                                logging.info(n)
+                encoder_layers = list(encoder.children())
+                self.backbone.append(nn.Sequential(*encoder_layers[:3]))
+                self.backbone.append(nn.Sequential(*encoder_layers[3:5]))
+                self.backbone.append(encoder_layers[5])
+                self.backbone.append(encoder_layers[6])
+                self.backbone.append(encoder_layers[7])
+            else:
+                encoder_layers = list(encoder.children())
+                self.backbone.append(nn.Sequential(*encoder_layers[:3]))
+                self.backbone.append(nn.Sequential(*encoder_layers[3:5]))
+                self.backbone.append(encoder_layers[5])
+                self.backbone.append(encoder_layers[6])
+                self.backbone.append(encoder_layers[7])
+                missing_keys,unmatched_keys = self.backbone.load_state_dict(weights,strict=False)
                 logging.info(f'Missing Keys: {missing_keys}.')
                 logging.info(f'Unmatched Keys: {unmatched_keys}.')
                 logging.info(f'Loaded weights.')
-            if encoder_frozen:
-                if weights is not None:
-                    for n, p in encoder.named_parameters():
-                            if  n in weights:
+                if encoder_frozen:
+                    if weights is not None:
+                        for n, p in self.backbone.named_parameters():
+                                if  n in weights:
+                                    p.requires_grad = False
+                    elif load_imagenet:
+                        for n, p in self.backbone.named_parameters():
+                            if 'fc' not in n:
                                 p.requires_grad = False
-                elif load_imagenet:
-                    for n, p in encoder.named_parameters():
-                        if 'fc' not in n:
-                            p.requires_grad = False
-                else:
-                    for n, p in encoder.named_parameters():
-                        if 'fc' not in n:
-                            p.requires_grad = False
-                logging.info('Unfrozen Layers:')
-                for n, p in encoder.named_parameters():
-                        if p.requires_grad:
-                            logging.info(n)
-                    
-            encoder_layers = list(encoder.children())
-            self.backbone.append(nn.Sequential(*encoder_layers[:3]))
-            self.backbone.append(nn.Sequential(*encoder_layers[3:5]))
-            self.backbone.append(encoder_layers[5])
-            self.backbone.append(encoder_layers[6])
-            self.backbone.append(encoder_layers[7])
+                    else:
+                        for n, p in self.backbone.named_parameters():
+                            if 'fc' not in n:
+                                p.requires_grad = False
+                    logging.info('Unfrozen Layers:')
+                    for n, p in self.backbone.named_parameters():
+                            if p.requires_grad:
+                                logging.info(n)
         if encoder_class == None:
             raise ValueError(f'Could not find encoder {encoder_type}!')
+        if len(weights) < min_number_of_weights:
+            raise Exception('Not enough weights loaded. Aborting.')
