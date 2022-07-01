@@ -18,7 +18,7 @@ class ResNetEncoder(BasicEncoder):
         pretraining_weights = 'imagenet',
         encoder_frozen=False,
         classification_output = False,
-        min_number_of_weights = 250
+        max_number_of_missing_weights = 100
     ):
         super().__init__(input_channels,classification_output)
         load_imagenet = False
@@ -87,6 +87,14 @@ class ResNetEncoder(BasicEncoder):
                     for key in encoder_q_keys:
                         filtered_weights[key.replace('encoder_q.0.backbone.','')] = weights[key]
                     weights = filtered_weights
+                if 'backbone.conv1.weight' in weights:
+                    # We assume its moco type if we have a encoder_q
+                    # Also we need the encoder_q key for the weigths to be extractable
+                    encoder_q_keys = [x for x in weights.keys() if 'backbone' in x]
+                    filtered_weights = {}
+                    for key in encoder_q_keys:
+                        filtered_weights[key.replace('backbone.','')] = weights[key]
+                    weights = filtered_weights
                 elif 'encoder' in weights:
                     for key in list(weights.keys()):
                         weights[key.replace('encoder.','')] = weights[key]
@@ -150,5 +158,5 @@ class ResNetEncoder(BasicEncoder):
                                 logging.info(n)
         if encoder_class == None:
             raise ValueError(f'Could not find encoder {encoder_type}!')
-        if weights is not None and len(weights) < min_number_of_weights:
+        if weights is not None and missing_keys is not None and len(missing_keys) > max_number_of_missing_weights:
             raise Exception('Not enough weights loaded. Aborting.')
