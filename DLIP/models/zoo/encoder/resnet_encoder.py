@@ -64,6 +64,12 @@ class ResNetEncoder(BasicEncoder):
                     for key in encoder_q_keys:
                         filtered_weights[key.replace('encoder_q.','')] = weights[key]
                     weights = filtered_weights
+                if 'online_network.encoder.conv1.weight' in weights:
+                    encoder_q_keys = [x for x in weights.keys() if 'online_network' in x]
+                    filtered_weights = {}
+                    for key in encoder_q_keys:
+                        filtered_weights[key.replace('online_network.encoder.','')] = weights[key]
+                    weights = filtered_weights
                 if 'encoder_q.0.conv1.weight' in weights:
                     # We assume its moco type if we have a encoder_q
                     # Also we need the encoder_q key for the weigths to be extractable
