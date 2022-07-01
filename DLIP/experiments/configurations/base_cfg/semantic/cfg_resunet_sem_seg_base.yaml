@@ -92,7 +92,7 @@ data.datamodule.arguments.val_to_train_ratio:
 data.datamodule.arguments.batch_size:
   value: 8
 data.datamodule.arguments.num_workers:
-  value: 6
+  value: 19
 
 # Callbacks Configuration
 train.callbacks.save_k_top_models:
@@ -117,8 +117,6 @@ data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:
   value: [256,256]
-data.img_processing.test_resize:
-  value: true
 
 # Augmentations
 data.img_processing.aug1.replay_processing_pipeline:

@@ -40,7 +40,7 @@ class ImgSegProcessingPipeline:
     def make_val_aug_transform(self, params):
         self.trafo_dict["val_aug"] = self.make_aug_transform(params=params)
 
-    def make_pre_transform(self, consider_resize=True):
+    def make_pre_transform(self, mode="train"):
         transform = []
 
         if self.params.img_type == "mono_16_bit":
@@ -53,17 +53,15 @@ class ImgSegProcessingPipeline:
             self.params.max_value = 255.0
 
         if hasattr(self.params, 'img_size'):
-            if isinstance(consider_resize, bool):
-                if consider_resize:
-                    transform.append(
-                        A.Resize(height=self.params.img_size[0],
-                                width=self.params.img_size[1])
-                    )
+            if mode=="train":
+                size = self.params.img_size[0] if self.params.img_size.shape == (2,2) else self.params.img_size
             else:
-                transform.append(
-                        A.Resize(height=consider_resize[0],
-                                width=consider_resize[1])
-                    )
+                size = self.params.img_size[1] if self.params.img_size.shape == (2,2) else self.params.img_size
+
+            transform.append(
+                    A.Resize(height=size[0],
+                            width=size[1])
+                )
         return self.get_transform(transform, replay=False)
 
     def make_aug_transform(self,params=None):
@@ -287,10 +285,7 @@ class ImgSegProcessingPipeline:
     
     def get_test_transform(self):
         trafo_dict = self.trafo_dict.copy()
-        consider_resize = True
-        if hasattr(self.params, 'test_resize'):
-            consider_resize = self.params.test_resize
-        trafo_dict["pre"] = self.make_pre_transform(consider_resize=consider_resize)
+        trafo_dict["pre"] = self.make_pre_transform(mode="test")
         trafo_dict["aug"] = None
         return trafo_dict
 

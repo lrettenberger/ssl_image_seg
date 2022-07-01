@@ -92,10 +92,7 @@ data.img_processing.img_type:
 data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:
-  value: [1024,1024]
-data.img_processing.test_resize:
-  value: [4000,4000]
-
+  value: [[1024,1024],[4000,4000]]
 # Augmentations
 data.img_processing.aug1.replay_processing_pipeline:
   value: false

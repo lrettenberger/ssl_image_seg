@@ -93,8 +93,6 @@ data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:
   value: [512,512]
-data.img_processing.test_resize:
-  value: true
 
 # Augmentations
 data.img_processing.aug1.replay_processing_pipeline:
