@@ -150,5 +150,5 @@ class ResNetEncoder(BasicEncoder):
                                 logging.info(n)
         if encoder_class == None:
             raise ValueError(f'Could not find encoder {encoder_type}!')
-        if len(weights) < min_number_of_weights:
+        if weights is not None and len(weights) < min_number_of_weights:
             raise Exception('Not enough weights loaded. Aborting.')
