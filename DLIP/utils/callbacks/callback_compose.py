@@ -7,6 +7,7 @@ from DLIP.utils.callbacks.log_best_metric import LogBestMetricsCallback
 
 from DLIP.utils.callbacks.image_seg_log import ImageLogSegCallback
 from DLIP.utils.callbacks.image_inst_seg_log import ImageLogInstSegCallback
+from DLIP.utils.callbacks.log_cka_callback import LogCKACallback
 from DLIP.utils.callbacks.log_instance_seg_metrics import LogInstSegMetricsCallback
 from DLIP.utils.callbacks.increase_ssl_img_size import IncreaseSSLImageSizeCallback
 
@@ -95,6 +96,15 @@ class CallbackCompose:
             self.callback_lst.append(
                 IncreaseSSLImageSizeCallback(increase_factor=factor)
             )
+            
+        if hasattr(self.params, 'log_cka'):
+            if self.params.log_cka:
+                benchmark_model_path = None if not self.params.log_cka_benchmark_model else self.params.log_cka_benchmark_model 
+                self.callback_lst.append(
+                    LogCKACallback(
+                        benchmark_model_path
+                    )
+                )
 
         # UNet Callbacks
         if hasattr(self.params, 'unet_inst_seg_img_log_enabled') and self.params.unet_inst_seg_img_log_enabled:
