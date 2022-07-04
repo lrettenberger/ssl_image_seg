@@ -59,8 +59,8 @@ class CKASimplified(CKA):
 
     
     def compare(self,
-                dataloader1: DataLoader,
-                dataloader2: DataLoader = None):
+                dataloader: DataLoader,
+    ):
         """
         Computes the feature similarity between the models on the
         given datasets.
@@ -68,36 +68,28 @@ class CKASimplified(CKA):
         :param dataloader2: (DataLoader) If given, model 2 will run on this
                             dataset. (default = None)
         """
-        if dataloader2 is None:
-            warn("Dataloader for Model 2 is not given. Using the same dataloader for both models.")
-            dataloader2 = dataloader1
-            
-        
-
-        self.model1_info['Dataset'] = dataloader1.dataset.__repr__().split('\n')[0]
-        self.model2_info['Dataset'] = dataloader2.dataset.__repr__().split('\n')[0]
 
         N = len(self.model1_layers) if self.model1_layers is not None else len(list(self.model1.modules()))
         M = len(self.model2_layers) if self.model2_layers is not None else len(list(self.model2.modules()))
 
         self.hsic_matrix = torch.zeros(N, M, 3)
 
-        num_batches = min(len(dataloader1), len(dataloader1))
+        num_batches = len(dataloader)
         
         cka_sum = 0
 
-        for (x1, *_), (x2, *_) in tqdm(zip(dataloader1, dataloader2), desc="| Comparing features |", total=num_batches):
+        for (x1, *_) in tqdm(dataloader, desc="| Comparing features |", total=num_batches):
 
             self.model1_features = {}
             self.model2_features = {}
             _ = self.model1(x1.to(self.device))
-            _ = self.model2(x2.to(self.device))
+            _ = self.model2(x1.to(self.device))
             
             cka_vals = []
             for i, ((name1, feat1),(name2, feat2)) in enumerate(zip(self.model1_features.items(), self.model2_features.items())):
                 X = feat1.flatten(1)
                 Y = feat2.flatten(1)
-                cka_vals.append(float(self.cuda_cka.linear_CKA(X, Y)))
+                cka_vals.append(float(torch.nan_to_num(self.cuda_cka.linear_CKA(X, Y))))
             cka_sum += sum(cka_vals) / len(cka_vals)
         return cka_sum / num_batches
                 
