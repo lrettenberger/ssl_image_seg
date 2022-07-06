@@ -8,6 +8,7 @@ from DLIP.utils.callbacks.log_best_metric import LogBestMetricsCallback
 from DLIP.utils.callbacks.image_seg_log import ImageLogSegCallback
 from DLIP.utils.callbacks.image_inst_seg_log import ImageLogInstSegCallback
 from DLIP.utils.callbacks.log_cka_callback import LogCKACallback
+from DLIP.utils.callbacks.log_feature_maps import LogFeatureMaps
 from DLIP.utils.callbacks.log_instance_seg_metrics import LogInstSegMetricsCallback
 from DLIP.utils.callbacks.increase_ssl_img_size import IncreaseSSLImageSizeCallback
 
@@ -16,6 +17,7 @@ from DLIP.utils.callbacks.unet_log_instance_seg_img import UNetLogInstSegImgCall
 from DLIP.utils.callbacks.detectron_log_instance_seg_metrics import DetectronLogInstSegMetricsCallback
 from DLIP.utils.callbacks.detectron_log_instance_seg_img import DetectronLogInstSegImgCallback
 from DLIP.utils.callbacks.detectron_log_sem_seg_img import DetectronLogSemSegImgCallback
+from DLIP.utils.callbacks.weight_update_log import WeightUpdateLog
 
 from DLIP.utils.loading.split_parameters import split_parameters
 from DLIP.utils.loading.dict_to_config import dict_to_config
@@ -104,6 +106,15 @@ class CallbackCompose:
                     LogCKACallback(
                         benchmark_model_path
                     )
+                )
+        if hasattr(self.params, 'log_weight_updated') and self.params.log_weight_updated:        
+                self.callback_lst.append(
+                    WeightUpdateLog()
+                )
+                
+        if hasattr(self.params, 'log_feature_maps') and self.params.log_feature_maps:        
+                self.callback_lst.append(
+                    LogFeatureMaps()
                 )
 
         # UNet Callbacks

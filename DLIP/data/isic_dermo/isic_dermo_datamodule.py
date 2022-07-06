@@ -17,7 +17,7 @@ class IsicDermoDataModule(BasePLDataModule):
         val_transforms=None,
         test_transforms=None,
         return_unlabeled_trafos=False,
-        num_workers=32,
+        num_workers=0,
         pin_memory=False,
         shuffle=True,
         drop_last=False,
