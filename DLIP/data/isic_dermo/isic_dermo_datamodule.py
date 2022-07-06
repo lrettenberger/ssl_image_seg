@@ -54,6 +54,7 @@ class IsicDermoDataModule(BasePLDataModule):
         self.classifier_mode = classifier_mode
         self.classify_melanoma = classify_melanoma
         self.__init_datasets()
+        self.assign_labeled_unlabeled_split()
 
     def __init_datasets(self):
         self.labeled_train_dataset = IsicDermoDataset(
