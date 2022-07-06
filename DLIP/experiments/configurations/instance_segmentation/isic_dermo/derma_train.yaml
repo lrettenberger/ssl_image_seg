@@ -103,7 +103,7 @@ train.callbacks.log_cka:
 train.callbacks.log_cka_benchmark_model:
   value: /home/ws/kg2371/lsdf/Daten_Schilling/2022_SSL_experiments/benchmark_model_sl/derma/dnn_weights.ckpt
 train.callbacks.log_weight_updated:
-  value: true
+  value: false
 
 
 
