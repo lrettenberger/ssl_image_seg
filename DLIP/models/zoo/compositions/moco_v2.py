@@ -83,6 +83,17 @@ class Mocov2(BaseComposition):
         self.val_queue = nn.functional.normalize(self.val_queue, dim=0)
         self.register_buffer("val_queue_ptr", torch.zeros(1, dtype=torch.long))
 
+
+        # instance queue
+        self.register_buffer("instance_queue", torch.randn(emb_dim, num_negatives*16)) # hardcode -> to change
+        self.instance_queue = nn.functional.normalize(self.instance_queue, dim=0)
+        self.register_buffer("instance_queue_ptr", torch.zeros(1, dtype=torch.long))
+
+        # instance validation queue
+        self.register_buffer("instance_val_queue", torch.randn(emb_dim, num_negatives_val*16)) # hardcode -> to change
+        self.instance_val_queue = nn.functional.normalize(self.instance_val_queue, dim=0)
+        self.register_buffer("instance_val_queue_ptr", torch.zeros(1, dtype=torch.long))
+
     def init_encoders(self, base_encoder,emb_dim):
         """Override to add your own encoders."""
 
@@ -103,7 +114,7 @@ class Mocov2(BaseComposition):
             param_k.data = param_k.data * em + param_q.data * (1.0 - em)
 
     @torch.no_grad()
-    def _dequeue_and_enqueue(self, keys, queue_ptr, queue,val_step=False):
+    def _dequeue_and_enqueue(self, keys, queue_ptr,instance_step, queue,val_step=False):
         # gather keys before updating queue
         if self._use_ddp_or_ddp2(self.trainer):
             keys = concat_all_gather(keys)
@@ -120,10 +131,17 @@ class Mocov2(BaseComposition):
             queue[:, 0 : start_point] = keys.T[:,remaining_items_before_end:]
         else:
             queue[:, ptr : ptr + batch_size] = keys.T
-        if not val_step:
-            ptr = (ptr + batch_size) % self.num_negatives  # move pointer
+        
+        if instance_step:
+            if not val_step:
+                ptr = (ptr + batch_size) % (self.num_negatives*16)  # move pointer
+            else:
+                ptr = (ptr + batch_size) % (self.num_negatives_val*16)  # move pointer
         else:
-            ptr = (ptr + batch_size) % self.num_negatives_val  # move pointer
+            if not val_step:
+                ptr = (ptr + batch_size) % self.num_negatives  # move pointer
+            else:
+                ptr = (ptr + batch_size) % self.num_negatives_val  # move pointer
         queue_ptr[0] = ptr
 
     def forward(self, img_q, img_k, queue):
@@ -169,7 +187,7 @@ class Mocov2(BaseComposition):
 
         self._momentum_update_key_encoder()  # update the key encoder
         output, target, keys = self(img_q=img_1, img_k=img_2, queue=self.queue)
-        self._dequeue_and_enqueue(keys, queue=self.queue, queue_ptr=self.queue_ptr)  # dequeue and enqueue
+        self._dequeue_and_enqueue(keys, queue=self.queue, queue_ptr=self.queue_ptr,instance_step=False)  # dequeue and enqueue
         loss = F.cross_entropy(output.float(), target.long())
         acc1, acc5 = precision_at_k(output, target, top_k=(1, 5))
 
@@ -182,7 +200,7 @@ class Mocov2(BaseComposition):
         (img_1, img_2), labels = batch
 
         output, target, keys = self(img_q=img_1, img_k=img_2, queue=self.val_queue)
-        self._dequeue_and_enqueue(keys, queue=self.val_queue, queue_ptr=self.val_queue_ptr,val_step=True)  # dequeue and enqueue
+        self._dequeue_and_enqueue(keys, queue=self.val_queue, queue_ptr=self.val_queue_ptr,val_step=True,instance_step=False)  # dequeue and enqueue
         loss = F.cross_entropy(output, target.long())
 
         acc1, acc5 = precision_at_k(output, target, top_k=(1, 5))
