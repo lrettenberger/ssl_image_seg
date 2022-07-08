@@ -205,9 +205,9 @@ class DenseCL(Mocov2):
             
             instance_loss = (loss_contrastive * self.loss_lambda) + (loss_dense * (1-self.loss_lambda))
 
-            self.log("train/instance_loss_contrastive", loss_contrastive, prog_bar=True)
-            self.log("train/instance_loss_dense", loss_dense, prog_bar=True)
-            self.log("train/instance_loss", instance_loss, prog_bar=True)
+            self.log("val/instance_loss_contrastive", loss_contrastive, prog_bar=True)
+            self.log("val/instance_loss_dense", loss_dense, prog_bar=True)
+            self.log("val/instance_loss", instance_loss, prog_bar=True)
 
             return loss_global + instance_loss
         return loss_global
