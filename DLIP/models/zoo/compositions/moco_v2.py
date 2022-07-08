@@ -229,8 +229,8 @@ class Mocov2(BaseComposition):
             loss = loss_global + loss
             self.log('val/loss', loss, prog_bar=True)
             return loss
-        
-        return loss
+        self.log("val/loss", loss_global, prog_bar=True, on_epoch=True)
+        return loss_global
 
     @staticmethod
     def _use_ddp_or_ddp2(trainer: Trainer) -> bool:

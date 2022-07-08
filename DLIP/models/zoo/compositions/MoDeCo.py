@@ -85,7 +85,30 @@ class MoDeCo(Mocov2):
         self.register_buffer("queue_x5", torch.randn(emb_dim, num_negatives))
         self.queue_x5 = nn.functional.normalize(self.queue_x5, dim=0)
         self.register_buffer("queue_ptr_x5", torch.zeros(1, dtype=torch.long))
+        
+        self.register_buffer("instance_queue_global", torch.randn(emb_dim, num_negatives*16))
+        self.instance_queue_global = nn.functional.normalize(self.instance_queue_global, dim=0)
+        self.register_buffer("instance_queue_ptr_global", torch.zeros(1, dtype=torch.long))
+        
+        self.register_buffer("instance_queue_x1", torch.randn(emb_dim, num_negatives*16))
+        self.instance_queue_x1 = nn.functional.normalize(self.instance_queue_x1, dim=0)
+        self.register_buffer("instance_queue_ptr_x1", torch.zeros(1, dtype=torch.long))
 
+        self.register_buffer("instance_queue_x2", torch.randn(emb_dim, num_negatives*16))
+        self.instance_queue_x2 = nn.functional.normalize(self.instance_queue_x2, dim=0)
+        self.register_buffer("instance_queue_ptr_x2", torch.zeros(1, dtype=torch.long))
+
+        self.register_buffer("instance_queue_x3", torch.randn(emb_dim, num_negatives*16))
+        self.instance_queue_x3 = nn.functional.normalize(self.instance_queue_x3, dim=0)
+        self.register_buffer("instance_queue_ptr_x3", torch.zeros(1, dtype=torch.long))
+
+        self.register_buffer("instance_queue_x4", torch.randn(emb_dim, num_negatives*16))
+        self.instance_queue_x4 = nn.functional.normalize(self.instance_queue_x4, dim=0)
+        self.register_buffer("instance_queue_ptr_x4", torch.zeros(1, dtype=torch.long))
+
+        self.register_buffer("instance_queue_x5", torch.randn(emb_dim, num_negatives*16))
+        self.instance_queue_x5 = nn.functional.normalize(self.instance_queue_x5, dim=0)
+        self.register_buffer("instance_queue_ptr_x5", torch.zeros(1, dtype=torch.long))
 
         # val
         if self.global_feature_space:
@@ -117,8 +140,31 @@ class MoDeCo(Mocov2):
         self.register_buffer("val_queue_x5", torch.randn(emb_dim, num_negatives_val))
         self.val_queue_x5 = nn.functional.normalize(self.val_queue_x5, dim=0)
         self.register_buffer("val_queue_ptr_x5", torch.zeros(1, dtype=torch.long))
+        
+        self.register_buffer("val_instance_queue_global", torch.randn(emb_dim, num_negatives_val*16))
+        self.val_instance_queue_global = nn.functional.normalize(self.val_instance_queue_global, dim=0)
+        self.register_buffer("val_instance_queue_ptr_global", torch.zeros(1, dtype=torch.long))
 
-  
+        self.register_buffer("val_instance_queue_x1", torch.randn(emb_dim, num_negatives_val*16))
+        self.val_instance_queue_x1 = nn.functional.normalize(self.val_instance_queue_x1, dim=0)
+        self.register_buffer("val_instance_queue_ptr_x1", torch.zeros(1, dtype=torch.long))
+
+        self.register_buffer("val_instance_queue_x2", torch.randn(emb_dim, num_negatives_val*16))
+        self.val_instance_queue_x2 = nn.functional.normalize(self.val_instance_queue_x2, dim=0)
+        self.register_buffer("val_instance_queue_ptr_x2", torch.zeros(1, dtype=torch.long))
+
+        self.register_buffer("val_instance_queue_x3", torch.randn(emb_dim, num_negatives_val*16))
+        self.val_instance_queue_x3 = nn.functional.normalize(self.val_instance_queue_x3, dim=0)
+        self.register_buffer("val_instance_queue_ptr_x3", torch.zeros(1, dtype=torch.long))
+
+        self.register_buffer("val_instance_queue_x4", torch.randn(emb_dim, num_negatives_val*16))
+        self.val_instance_queue_x4 = nn.functional.normalize(self.val_instance_queue_x4, dim=0)
+        self.register_buffer("val_instance_queue_ptr_x4", torch.zeros(1, dtype=torch.long))
+
+        self.register_buffer("val_instance_queue_x5", torch.randn(emb_dim, num_negatives_val*16))
+        self.val_instance_queue_x5 = nn.functional.normalize(self.val_instance_queue_x5, dim=0)
+        self.register_buffer("val_instance_queue_ptr_x5", torch.zeros(1, dtype=torch.long))
+        
     def forward(self, img_q, img_k, queues):
         """
         Input:
@@ -211,13 +257,19 @@ class MoDeCo(Mocov2):
     
     
     def training_step(self, batch, batch_idx):
-        (img_1,img_2), (_) = batch
+        img_3, img_4 = None, None
+        if len(batch[0]) == 4: # instance case. hacky, sorry.
+            (img_1,img_2,img_3,img_4), (_) = batch
+            img_3 = img_3.flatten(0, 1)
+            img_4 = img_4.flatten(0, 1)
+        else:
+            (img_1,img_2), (_) = batch
 
         self._momentum_update_key_encoder()  # update the key encoder
 
         if self.global_feature_space:
             output, target, keys, weight_map = self(img_q=img_1, img_k=img_2, queues=[self.queue_global,self.queue_x1,self.queue_x2,self.queue_x3,self.queue_x4,self.queue_x5])
-            self._dequeue_and_enqueue(keys, queue=self.queue_global, queue_ptr=self.queue_ptr_global)
+            self._dequeue_and_enqueue(keys, queue=self.queue_global, queue_ptr=self.queue_ptr_global,instance_step=False)
             loss = F.cross_entropy(((torch.Tensor(weight_map).unsqueeze(1)).repeat(1,output.shape[1]).cuda() * output).float(), target.long())
             self.log("train/loss",loss,  prog_bar=True, on_epoch=True)
             return loss
@@ -227,42 +279,69 @@ class MoDeCo(Mocov2):
 
             losses = []
             
-            self._dequeue_and_enqueue(keys[0], queue=self.queue_global, queue_ptr=self.queue_ptr_global)
+            self._dequeue_and_enqueue(keys[0], queue=self.queue_global, queue_ptr=self.queue_ptr_global,instance_step=False)
             losses.append(F.cross_entropy(output[0].float(), target[0].long()))
 
-            self._dequeue_and_enqueue(keys[1], queue=self.queue_x1, queue_ptr=self.queue_ptr_x1)
+            self._dequeue_and_enqueue(keys[1], queue=self.queue_x1, queue_ptr=self.queue_ptr_x1,instance_step=False)
             losses.append(F.cross_entropy(output[1].float(), target[1].long()))
 
-            self._dequeue_and_enqueue(keys[2], queue=self.queue_x2, queue_ptr=self.queue_ptr_x2)
+            self._dequeue_and_enqueue(keys[2], queue=self.queue_x2, queue_ptr=self.queue_ptr_x2,instance_step=False)
             losses.append(F.cross_entropy(output[2].float(), target[2].long()))
 
-            self._dequeue_and_enqueue(keys[3], queue=self.queue_x3, queue_ptr=self.queue_ptr_x3)
+            self._dequeue_and_enqueue(keys[3], queue=self.queue_x3, queue_ptr=self.queue_ptr_x3,instance_step=False)
             losses.append(F.cross_entropy(output[3].float(), target[3].long()))
 
-            self._dequeue_and_enqueue(keys[4], queue=self.queue_x4, queue_ptr=self.queue_ptr_x4)
+            self._dequeue_and_enqueue(keys[4], queue=self.queue_x4, queue_ptr=self.queue_ptr_x4,instance_step=False)
             losses.append(F.cross_entropy(output[4].float(), target[4].long()))
 
-            self._dequeue_and_enqueue(keys[5], queue=self.queue_x5, queue_ptr=self.queue_ptr_x5)
+            self._dequeue_and_enqueue(keys[5], queue=self.queue_x5, queue_ptr=self.queue_ptr_x5,instance_step=False)
             losses.append(F.cross_entropy(output[5].float(), target[5].long()))
 
             loss = 0
             for i in range(len(losses)):
                 if i in self.activated_layers:
                     loss+=losses[i]*self.loss_weights[i]
-
-            self.log("train/loss_global",losses[0],  prog_bar=True, on_epoch=True)
-            self.log("train/loss_1",losses[1],  prog_bar=True, on_epoch=True)
-            self.log("train/loss_2",losses[2],  prog_bar=True, on_epoch=True)
-            self.log("train/loss_3",losses[3],  prog_bar=True, on_epoch=True)
-            self.log("train/loss_4",losses[4],  prog_bar=True, on_epoch=True)
-            self.log("train/loss_5",losses[5],  prog_bar=True, on_epoch=True)
             self.log("train/loss",loss,  prog_bar=True, on_epoch=True)
+            
+            if img_3 is not None: # instance case
+                output, target, keys = self(img_q=img_3, img_k=img_4, queues=[self.instance_queue_global,self.instance_queue_x1,self.instance_queue_x2,self.instance_queue_x3,self.instance_queue_x4,self.instance_queue_x5])
+                losses = []
+                
+                self._dequeue_and_enqueue(keys[0], queue=self.instance_queue_global, queue_ptr=self.instance_queue_ptr_global,instance_step=True)
+                losses.append(F.cross_entropy(output[0].float(), target[0].long()))
 
+                self._dequeue_and_enqueue(keys[1], queue=self.instance_queue_x1, queue_ptr=self.instance_queue_ptr_x1,instance_step=True)
+                losses.append(F.cross_entropy(output[1].float(), target[1].long()))
+
+                self._dequeue_and_enqueue(keys[2], queue=self.instance_queue_x2, queue_ptr=self.instance_queue_ptr_x2,instance_step=True)
+                losses.append(F.cross_entropy(output[2].float(), target[2].long()))
+
+                self._dequeue_and_enqueue(keys[3], queue=self.instance_queue_x3, queue_ptr=self.instance_queue_ptr_x3,instance_step=True)
+                losses.append(F.cross_entropy(output[3].float(), target[3].long()))
+
+                self._dequeue_and_enqueue(keys[4], queue=self.instance_queue_x4, queue_ptr=self.instance_queue_ptr_x4,instance_step=True)
+                losses.append(F.cross_entropy(output[4].float(), target[4].long()))
+
+                self._dequeue_and_enqueue(keys[5], queue=self.instance_queue_x5, queue_ptr=self.instance_queue_ptr_x5,instance_step=True)
+                losses.append(F.cross_entropy(output[5].float(), target[5].long()))
+
+                loss_instance = 0
+                for i in range(len(losses)):
+                    if i in self.activated_layers:
+                        loss_instance+=losses[i]*self.loss_weights[i]
+                self.log("train/loss_instance",loss_instance,  prog_bar=True, on_epoch=True)
+                return loss+loss_instance
             return loss
 
 
     def validation_step(self, batch, batch_idx):
-        (img_1,img_2), (_) = batch
+        img_3, img_4 = None, None
+        if len(batch[0]) == 4: # instance case. hacky, sorry.
+            (img_1,img_2,img_3,img_4), (_) = batch
+            img_3 = img_3.flatten(0, 1)
+            img_4 = img_4.flatten(0, 1)
+        else:
+            (img_1,img_2), (_) = batch
 
         if self.global_feature_space:
             output, target, keys, weight_map = self(img_q=img_1, img_k=img_2, queues=[self.val_queue_global,self.queue_x1,self.queue_x2,self.queue_x3,self.queue_x4,self.queue_x5])
@@ -276,35 +355,57 @@ class MoDeCo(Mocov2):
 
             losses = []
             
-            self._dequeue_and_enqueue(keys[0], queue=self.val_queue_global, queue_ptr=self.val_queue_ptr_global,val_step=True)
+            self._dequeue_and_enqueue(keys[0], queue=self.val_queue_global, queue_ptr=self.val_queue_ptr_global,val_step=True,instance_step=False)
             losses.append(F.cross_entropy(output[0].float(), target[0].long()))
 
-            self._dequeue_and_enqueue(keys[1], queue=self.val_queue_x1, queue_ptr=self.val_queue_ptr_x1,val_step=True)
+            self._dequeue_and_enqueue(keys[1], queue=self.val_queue_x1, queue_ptr=self.val_queue_ptr_x1,val_step=True,instance_step=False)
             losses.append(F.cross_entropy(output[1].float(), target[1].long()))
 
-            self._dequeue_and_enqueue(keys[2], queue=self.val_queue_x2, queue_ptr=self.val_queue_ptr_x2,val_step=True)
+            self._dequeue_and_enqueue(keys[2], queue=self.val_queue_x2, queue_ptr=self.val_queue_ptr_x2,val_step=True,instance_step=False)
             losses.append(F.cross_entropy(output[2].float(), target[2].long()))
 
-            self._dequeue_and_enqueue(keys[3], queue=self.val_queue_x3, queue_ptr=self.val_queue_ptr_x3,val_step=True)
+            self._dequeue_and_enqueue(keys[3], queue=self.val_queue_x3, queue_ptr=self.val_queue_ptr_x3,val_step=True,instance_step=False)
             losses.append(F.cross_entropy(output[3].float(), target[3].long()))
 
-            self._dequeue_and_enqueue(keys[4], queue=self.val_queue_x4, queue_ptr=self.val_queue_ptr_x4,val_step=True)
+            self._dequeue_and_enqueue(keys[4], queue=self.val_queue_x4, queue_ptr=self.val_queue_ptr_x4,val_step=True,instance_step=False)
             losses.append(F.cross_entropy(output[4].float(), target[4].long()))
 
-            self._dequeue_and_enqueue(keys[5], queue=self.val_queue_x5, queue_ptr=self.val_queue_ptr_x5,val_step=True)
+            self._dequeue_and_enqueue(keys[5], queue=self.val_queue_x5, queue_ptr=self.val_queue_ptr_x5,val_step=True,instance_step=False)
             losses.append(F.cross_entropy(output[5].float(), target[5].long()))
 
             loss = 0
             for i in range(len(losses)):
                 if i in self.activated_layers:
                     loss+=losses[i]*self.loss_weights[i]
-
-            self.log("val/loss_global",losses[0],  prog_bar=True, on_epoch=True)
-            self.log("val/loss_1",losses[1],  prog_bar=True, on_epoch=True)
-            self.log("val/loss_2",losses[2],  prog_bar=True, on_epoch=True)
-            self.log("val/loss_3",losses[3],  prog_bar=True, on_epoch=True)
-            self.log("val/loss_4",losses[4],  prog_bar=True, on_epoch=True)
-            self.log("val/loss_5",losses[5],  prog_bar=True, on_epoch=True)
             self.log("val/loss",loss,  prog_bar=True, on_epoch=True)
+            
+            if img_3 is not None: # instance case
+                output, target, keys = self(img_q=img_3, img_k=img_4, queues=[self.val_instance_queue_global,self.val_instance_queue_x1,self.val_instance_queue_x2,self.val_instance_queue_x3,self.val_instance_queue_x4,self.val_instance_queue_x5])
+                losses = []
+
+                self._dequeue_and_enqueue(keys[0], queue=self.val_instance_queue_global, queue_ptr=self.val_instance_queue_ptr_global,instance_step=True,val_step=True)
+                losses.append(F.cross_entropy(output[0].float(), target[0].long()))
+
+                self._dequeue_and_enqueue(keys[1], queue=self.val_instance_queue_x1, queue_ptr=self.val_instance_queue_ptr_x1,instance_step=True,val_step=True)
+                losses.append(F.cross_entropy(output[1].float(), target[1].long()))
+
+                self._dequeue_and_enqueue(keys[2], queue=self.val_instance_queue_x2, queue_ptr=self.val_instance_queue_ptr_x2,instance_step=True,val_step=True)
+                losses.append(F.cross_entropy(output[2].float(), target[2].long()))
+
+                self._dequeue_and_enqueue(keys[3], queue=self.val_instance_queue_x3, queue_ptr=self.val_instance_queue_ptr_x3,instance_step=True,val_step=True)
+                losses.append(F.cross_entropy(output[3].float(), target[3].long()))
+
+                self._dequeue_and_enqueue(keys[4], queue=self.val_instance_queue_x4, queue_ptr=self.val_instance_queue_ptr_x4,instance_step=True,val_step=True)
+                losses.append(F.cross_entropy(output[4].float(), target[4].long()))
+
+                self._dequeue_and_enqueue(keys[5], queue=self.val_instance_queue_x5, queue_ptr=self.val_instance_queue_ptr_x5,instance_step=True,val_step=True)
+                losses.append(F.cross_entropy(output[5].float(), target[5].long()))
+
+                loss_instance = 0
+                for i in range(len(losses)):
+                    if i in self.activated_layers:
+                        loss_instance+=losses[i]*self.loss_weights[i]
+                self.log("train/loss_instance",loss_instance,  prog_bar=True, on_epoch=True)
+                return loss+loss_instance
 
             return loss
