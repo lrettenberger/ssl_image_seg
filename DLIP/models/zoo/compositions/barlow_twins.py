@@ -82,21 +82,43 @@ class BarlowTwins(BaseComposition):
         return self.loss_fcn(z1, z2)
 
     def training_step(self, batch, batch_idx):
-        loss = self.shared_step(batch)
-        self.log("train/loss", loss, prog_bar=True)
-        return loss
+        if len(batch[0]) == 2:
+            loss = self.shared_step(batch)
+            self.log("train/loss", loss, prog_bar=True)
+            return loss
+        elif len(batch[0]) == 4:
+            loss_global = self.shared_step([batch[0][:2],batch[1][:2]])
+            self.log("train/loss_global", loss_global, prog_bar=True)
+            loss_instance = self.shared_step([[batch[0][2].flatten(0, 1),batch[0][3].flatten(0, 1)],batch[1][2:]])
+            self.log("train/loss_instance", loss_instance, prog_bar=True)
+            self.log("train/loss", loss_global+loss_instance, prog_bar=True)
+            return loss_global + loss_instance
 
     def validation_step(self, batch, batch_idx):
-        loss = self.shared_step(batch)
-        #self.log_metrics(y_pred, y_true, mode="val")
-        self.log("val/loss", loss, prog_bar=True, on_epoch=True, on_step=False)
-        return loss
+        if len(batch[0]) == 2:
+            loss = self.shared_step(batch)
+            self.log("val/loss", loss,prog_bar=True, on_epoch=True, on_step=False)
+            return loss
+        elif len(batch[0]) == 4:
+            loss_global = self.shared_step([batch[0][:2],batch[1][:2]])
+            self.log("val/loss_global", loss_global, prog_bar=True, on_epoch=True, on_step=False)
+            loss_instance = self.shared_step([[batch[0][2].flatten(0, 1),batch[0][3].flatten(0, 1)],batch[1][2:]])
+            self.log("val/loss_instance", loss_instance, prog_bar=True, on_epoch=True, on_step=False)
+            self.log("val/loss", loss_global+loss_instance, prog_bar=True, on_epoch=True, on_step=False)
+            return loss_global + loss_instance
 
     def test_step(self, batch, batch_idx):
-        loss = self.shared_step(batch)
-        #self.log_metrics(y_pred, y_true, mode="test")
-        self.log("test/loss", loss, prog_bar=True, on_epoch=True, on_step=False)
-        return loss
+        if len(batch[0]) == 2:
+            loss = self.shared_step(batch)
+            self.log("test/loss", loss,prog_bar=True, on_epoch=True, on_step=False)
+            return loss
+        elif len(batch[0]) == 4:
+            loss_global = self.shared_step([batch[0][:2],batch[1][:2]])
+            self.log("test/loss_global", loss_global, prog_bar=True, on_epoch=True, on_step=False)
+            loss_instance = self.shared_step([[batch[0][2].flatten(0, 1),batch[0][3].flatten(0, 1)],batch[1][2:]])
+            self.log("test/loss_instance", loss_instance, prog_bar=True, on_epoch=True, on_step=False)
+            self.log("test/loss", loss_global+loss_instance, prog_bar=True, on_epoch=True, on_step=False)
+            return loss_global + loss_instance
 
     def optimizer_step(
         self,
