@@ -345,7 +345,7 @@ class MoDeCo(Mocov2):
 
         if self.global_feature_space:
             output, target, keys, weight_map = self(img_q=img_1, img_k=img_2, queues=[self.val_queue_global,self.queue_x1,self.queue_x2,self.queue_x3,self.queue_x4,self.queue_x5])
-            self._dequeue_and_enqueue(keys, queue=self.val_queue_global, queue_ptr=self.val_queue_ptr_global, val_step=True)
+            self._dequeue_and_enqueue(keys, queue=self.val_queue_global, queue_ptr=self.val_queue_ptr_global, val_step=True,instance_step=False)
             loss = F.cross_entropy(((torch.Tensor(weight_map).unsqueeze(1)).repeat(1,output.shape[1]).cuda() * output).float(), target.long())
             self.log("val/loss",loss,  prog_bar=True, on_epoch=True)
             return loss

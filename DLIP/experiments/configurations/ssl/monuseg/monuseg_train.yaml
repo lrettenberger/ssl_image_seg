@@ -6,22 +6,17 @@ experiment.seed:
 
 # Model Configuration
 model.name:
-  value: DenseCL
+  value: MoDeCO
 model.params.num_negatives:
   value: 474
 model.params.num_negatives_val:
   value: 118
-# global, layer1,layer2,layer3,layer4,layer5
-# model.params.activated_layers:
-#   #value: [0,1,2,3,4,5]
-#   #value: [0,4,5]
-#   #value: [0,3,4,5]
-# model.params.loss_weights:
-#   #value: [1.0, 0.1, 0.1, 0.4, 0.7, 1.0]
-#   #value: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-# model.params.global_feature_space:
-#   #value: true
-#   #value: false
+model.params.activated_layers:
+  value: [0,3,4,5]
+model.params.loss_weights:
+  value: [1.0, 0.1, 0.1, 0.4, 0.7, 1.0]
+model.params.global_feature_space:
+  value: true
 
 # Optimizer
 model.optimizer.type:
@@ -54,7 +49,7 @@ data.datamodule.name:
   value: BaseInstanceSegmentationDataModule
 data.datamodule.root_dirs:
   value: 
-    local: /home/ws/kg2371/lsdf/Daten_Schilling/datasets/2018_MoNuSeg_cropped/
+    local: /lsdf/Daten_Schilling/datasets/2018_MoNuSeg_cropped/
     iai_gpu: 
 data.datamodule.device:
   value: 
@@ -70,16 +65,16 @@ data.datamodule.arguments.dataset_size:
 data.datamodule.arguments.label_suffix:
   value: ''
 data.datamodule.arguments.instance_segmentation_head:
-  value: True
+  value: false
 
 
 # Callbacks Configuration
 train.callbacks.save_k_top_models:
-  value: 10
+  value: 5
 train.callbacks.early_stopping_enabled:
   value: false
 train.callbacks.early_stopping_patience:
-  value: 40
+  value: 1000
 train.callbacks.best_metrics_log_enabled:
   value: true
 train.callbacks.log_best_metric_dict:

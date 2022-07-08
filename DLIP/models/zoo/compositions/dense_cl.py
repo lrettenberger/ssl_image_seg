@@ -19,6 +19,7 @@ class DenseCL(Mocov2):
         softmax_temperature: float = 0.07,
         loss_lambda = 0.5,
         neck='densecl',
+        **kwargs
     ):
         super().__init__(base_encoder, emb_dim, num_negatives, num_negatives_val, encoder_momentum, softmax_temperature, neck)
 
