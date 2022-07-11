@@ -36,9 +36,9 @@ model.params.decoder_filters:
   value: [512, 256, 128, 64, 32]
 model.params.pretraining_weights:
   #value: /home/ws/kg2371/projects/self-supervised-biomedical-image-segmentation/results/first-shot/BaseInstanceSegmentationDataModule/DenseCL/0055/dnn_weights-v5.ckpt
-  value: imagenet
+  value: /home/ws/kg2371/lsdf/Daten_Schilling/2022_SSL_experiments/ssl_weights/monuseg/barlow_twins/dnn_weights.ckpt
 model.params.encoder_frozen:
-  value: true
+  value: false
 model.loss_fcn:
   value: SmoothL1Loss
 
@@ -99,7 +99,7 @@ data.datamodule.root_dirs:
 data.datamodule.device:
   value: local
 data.datamodule.arguments.dataset_size:
-  value: 0.1
+  value: 0.01
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
