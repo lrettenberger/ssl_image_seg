@@ -5,7 +5,7 @@ wandb.project_name:
   value: monuseg
 # The w&b user or group the project should belong to.
 wandb.entity:
-  value: marcelschilling
+  value: lucare
 wandb.notes:
   value: First test
 wandb.tags:
@@ -35,7 +35,8 @@ model.params.decoder_type:
 model.params.decoder_filters:
   value: [512, 256, 128, 64, 32]
 model.params.pretraining_weights:
-  value: null
+  #value: /home/ws/kg2371/projects/self-supervised-biomedical-image-segmentation/results/first-shot/BaseInstanceSegmentationDataModule/DenseCL/0055/dnn_weights-v5.ckpt
+  value: /home/ws/kg2371/lsdf/Daten_Schilling/2022_SSL_experiments/ssl_weights/monuseg/barlow_twins/dnn_weights.ckpt
 model.params.encoder_frozen:
   value: false
 model.loss_fcn:
@@ -78,7 +79,7 @@ model.optimizer.lrs.params.min_lr:
 
 # Trainer Configuration
 train.trainer.max_epochs:
-  value: 2
+  value: 200
 train.trainer.num_sanity_val_steps:
   value: 0
 train.trainer.gpus:
@@ -91,14 +92,14 @@ data.datamodule.name:
   value: BaseInstanceSegmentationDataModule
 data.datamodule.root_dirs:
   value: 
-    local: /home/ws/sc1357/data/datasets/2018_MoNuSeg_cropped
+    local: /home/ws/kg2371/lsdf/Daten_Schilling/datasets/2018_MoNuSeg_cropped/
     iai_gpu:
     horeka: 
     horeka_local: /home/hk-project-sppo/sc1357/data/2018_MoNuSeg_cropped
 data.datamodule.device:
-  value: horeka_local
+  value: local
 data.datamodule.arguments.dataset_size:
-  value: 1.0
+  value: 0.01
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
@@ -115,7 +116,7 @@ train.callbacks.save_k_top_models:
 train.callbacks.early_stopping_enabled:
   value: true
 train.callbacks.early_stopping_patience:
-  value: 100
+  value: 30
 train.callbacks.best_metrics_log_enabled:
   value: true
 train.callbacks.log_best_metric_dict:
@@ -127,7 +128,7 @@ train.callbacks.unet_inst_seg_img_log_enabled:
 
 # General Augmentations
 data.img_processing.norm_type:
-  value: per_image_mean_std
+  value: per_image
 data.img_processing.img_type:
   value: rgb_8_bit
 data.img_processing.replay_processing_pipeline:

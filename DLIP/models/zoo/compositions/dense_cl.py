@@ -4,6 +4,7 @@ import torch
 from torch.nn import functional as F
 from pl_bolts.metrics import precision_at_k
 from DLIP.models.zoo.compositions.moco_v2 import Mocov2
+from DLIP.utils.helper_functions.split_image import slice_image
 
 
 class DenseCL(Mocov2):
@@ -17,7 +18,8 @@ class DenseCL(Mocov2):
         encoder_momentum: float = 0.999,
         softmax_temperature: float = 0.07,
         loss_lambda = 0.5,
-        neck='densecl'
+        neck='densecl',
+        **kwargs
     ):
         super().__init__(base_encoder, emb_dim, num_negatives, num_negatives_val, encoder_momentum, softmax_temperature, neck)
 
@@ -32,6 +34,17 @@ class DenseCL(Mocov2):
         self.dense_val_queue = nn.functional.normalize(self.dense_val_queue, dim=0)
         self.register_buffer("dense_val_queue_ptr", torch.zeros(1, dtype=torch.long))
 
+
+        # instance 
+        # create the dense queue
+        self.register_buffer("instance_dense_queue", torch.randn(emb_dim, num_negatives*16))
+        self.instance_dense_queue  = nn.functional.normalize(self.instance_dense_queue, dim=0)
+        self.register_buffer("instance_dense_queue_ptr", torch.zeros(1, dtype=torch.long))
+
+        # create the validation dense queue
+        self.register_buffer("instance_dense_val_queue", torch.randn(emb_dim, num_negatives_val*16))
+        self.instance_dense_val_queue = nn.functional.normalize(self.instance_dense_val_queue, dim=0)
+        self.register_buffer("instance_dense_val_queue_ptr", torch.zeros(1, dtype=torch.long))
 
     def forward(self, img_q, img_k, queue, dense_queue):
         """
@@ -104,45 +117,98 @@ class DenseCL(Mocov2):
 
     def training_step(self, batch, batch_idx):
 
-        (img_1,img_2), (_) = batch
+        img_3, img_4 = None, None
+        if len(batch[0]) == 4: # instance case. hacky, sorry.
+            (img_1,img_2,img_3,img_4), (_) = batch
+            img_3 = img_3.flatten(0, 1)
+            img_4 = img_4.flatten(0, 1)
+        else:
+            (img_1,img_2), (_) = batch
 
         self._momentum_update_key_encoder()  # update the key encoder
         loss = self(img_q=img_1, img_k=img_2, queue=self.queue, dense_queue=self.dense_queue)
         
         # contrastive loss
         output, target, keys = loss['contrastive']
-        self._dequeue_and_enqueue(keys, queue=self.queue, queue_ptr=self.queue_ptr)  # dequeue and enqueue
+        self._dequeue_and_enqueue(keys, queue=self.queue, queue_ptr=self.queue_ptr,instance_step=False)  # dequeue and enqueue
         loss_contrastive = F.cross_entropy(output.float(), target.long())
         
         # dense loss
         output_dense, target_dense, keys_dense = loss['dense']
-        self._dequeue_and_enqueue(keys_dense, queue=self.dense_queue, queue_ptr=self.dense_queue_ptr)
+        self._dequeue_and_enqueue(keys_dense, queue=self.dense_queue, queue_ptr=self.dense_queue_ptr,instance_step=False)
         loss_dense = F.cross_entropy(output_dense.float(), target_dense.long())
         
-        loss = (loss_contrastive * self.loss_lambda) + (loss_dense * (1-self.loss_lambda))
+        loss_global = (loss_contrastive * self.loss_lambda) + (loss_dense * (1-self.loss_lambda))
 
         self.log("train/loss_contrastive", loss_contrastive, prog_bar=True)
         self.log("train/loss_dense", loss_dense, prog_bar=True)
-        self.log("train/loss", loss, prog_bar=True)
-        return loss
+        self.log("train/loss", loss_global, prog_bar=True)
+
+        if img_3 is not None: # instance case
+            loss = self(img_q=img_3, img_k=img_4, queue=self.instance_queue, dense_queue=self.instance_dense_queue)
+            # contrastive loss
+            output, target, keys = loss['contrastive']
+            self._dequeue_and_enqueue(keys, queue=self.instance_queue, queue_ptr=self.instance_queue_ptr,instance_step=True)  # dequeue and enqueue
+            loss_contrastive = F.cross_entropy(output.float(), target.long())
+            
+            # dense loss
+            output_dense, target_dense, keys_dense = loss['dense']
+            self._dequeue_and_enqueue(keys_dense, queue=self.instance_dense_queue, queue_ptr=self.instance_dense_queue_ptr,instance_step=True)
+            loss_dense = F.cross_entropy(output_dense.float(), target_dense.long())
+            
+            instance_loss = (loss_contrastive * self.loss_lambda) + (loss_dense * (1-self.loss_lambda))
+
+            self.log("train/instance_loss_contrastive", loss_contrastive, prog_bar=True)
+            self.log("train/instance_loss_dense", loss_dense, prog_bar=True)
+            self.log("train/instance_loss", instance_loss, prog_bar=True)
+
+
+            return loss_global + instance_loss
+        return loss_global
 
     def validation_step(self, batch, batch_idx):
-        (img_1, img_2), labels = batch
+        img_3, img_4 = None, None
+        if len(batch[0]) == 4: # instance case. hacky, sorry.
+            (img_1,img_2,img_3,img_4), (_) = batch
+            img_3 = img_3.flatten(0, 1)
+            img_4 = img_4.flatten(0, 1)
+        else:
+            (img_1,img_2), (_) = batch
         
         loss = self(img_q=img_1, img_k=img_2, queue=self.val_queue, dense_queue=self.dense_val_queue)
         # contrastive loss
         output, target, keys = loss['contrastive']
-        self._dequeue_and_enqueue(keys, queue=self.val_queue, queue_ptr=self.val_queue_ptr,val_step=True)  # dequeue and enqueue
+        self._dequeue_and_enqueue(keys, queue=self.val_queue, queue_ptr=self.val_queue_ptr,val_step=True,instance_step=False)  # dequeue and enqueue
         loss_contrastive = F.cross_entropy(output.float(), target.long())        
         
         # dense loss
         output_dense, target_dense, keys_dense = loss['dense']
-        self._dequeue_and_enqueue(keys_dense, queue=self.dense_val_queue, queue_ptr=self.dense_val_queue_ptr,val_step=True)
+        self._dequeue_and_enqueue(keys_dense, queue=self.dense_val_queue, queue_ptr=self.dense_val_queue_ptr,val_step=True,instance_step=False)
         loss_dense = F.cross_entropy(output_dense.float(), target_dense.long())
         
-        loss = (loss_contrastive * self.loss_lambda) + (loss_dense * (1-self.loss_lambda))
+        loss_global = (loss_contrastive * self.loss_lambda) + (loss_dense * (1-self.loss_lambda))
 
         self.log("val/loss_contrastive", loss_contrastive, prog_bar=True)
         self.log("val/loss_dense", loss_dense, prog_bar=True)
-        self.log("val/loss", loss, prog_bar=True)
-        return loss
+        self.log("val/loss", loss_global, prog_bar=True)
+
+        if img_3 is not None: # instance case
+            loss = self(img_q=img_3, img_k=img_4, queue=self.instance_val_queue, dense_queue=self.instance_dense_val_queue)
+            # contrastive loss
+            output, target, keys = loss['contrastive']
+            self._dequeue_and_enqueue(keys, queue=self.instance_val_queue, queue_ptr=self.instance_val_queue_ptr,val_step=True,instance_step=True)  # dequeue and enqueue
+            loss_contrastive = F.cross_entropy(output.float(), target.long())
+            
+            # dense loss
+            output_dense, target_dense, keys_dense = loss['dense']
+            self._dequeue_and_enqueue(keys_dense, queue=self.instance_dense_val_queue, queue_ptr=self.instance_dense_val_queue_ptr,val_step=True,instance_step=True)
+            loss_dense = F.cross_entropy(output_dense.float(), target_dense.long())
+            
+            instance_loss = (loss_contrastive * self.loss_lambda) + (loss_dense * (1-self.loss_lambda))
+
+            self.log("val/instance_loss_contrastive", loss_contrastive, prog_bar=True)
+            self.log("val/instance_loss_dense", loss_dense, prog_bar=True)
+            self.log("val/instance_loss", instance_loss, prog_bar=True)
+
+            return loss_global + instance_loss
+        return loss_global

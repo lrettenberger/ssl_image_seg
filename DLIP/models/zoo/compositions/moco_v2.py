@@ -83,6 +83,17 @@ class Mocov2(BaseComposition):
         self.val_queue = nn.functional.normalize(self.val_queue, dim=0)
         self.register_buffer("val_queue_ptr", torch.zeros(1, dtype=torch.long))
 
+
+        # instance queue
+        self.register_buffer("instance_queue", torch.randn(emb_dim, num_negatives*16)) # hardcode -> to change
+        self.instance_queue = nn.functional.normalize(self.instance_queue, dim=0)
+        self.register_buffer("instance_queue_ptr", torch.zeros(1, dtype=torch.long))
+
+        # instance validation queue
+        self.register_buffer("instance_val_queue", torch.randn(emb_dim, num_negatives_val*16)) # hardcode -> to change
+        self.instance_val_queue = nn.functional.normalize(self.instance_val_queue, dim=0)
+        self.register_buffer("instance_val_queue_ptr", torch.zeros(1, dtype=torch.long))
+
     def init_encoders(self, base_encoder,emb_dim):
         """Override to add your own encoders."""
 
@@ -103,7 +114,7 @@ class Mocov2(BaseComposition):
             param_k.data = param_k.data * em + param_q.data * (1.0 - em)
 
     @torch.no_grad()
-    def _dequeue_and_enqueue(self, keys, queue_ptr, queue,val_step=False):
+    def _dequeue_and_enqueue(self, keys, queue_ptr,instance_step, queue,val_step=False):
         # gather keys before updating queue
         if self._use_ddp_or_ddp2(self.trainer):
             keys = concat_all_gather(keys)
@@ -120,10 +131,17 @@ class Mocov2(BaseComposition):
             queue[:, 0 : start_point] = keys.T[:,remaining_items_before_end:]
         else:
             queue[:, ptr : ptr + batch_size] = keys.T
-        if not val_step:
-            ptr = (ptr + batch_size) % self.num_negatives  # move pointer
+        
+        if instance_step:
+            if not val_step:
+                ptr = (ptr + batch_size) % (self.num_negatives*16)  # move pointer
+            else:
+                ptr = (ptr + batch_size) % (self.num_negatives_val*16)  # move pointer
         else:
-            ptr = (ptr + batch_size) % self.num_negatives_val  # move pointer
+            if not val_step:
+                ptr = (ptr + batch_size) % self.num_negatives  # move pointer
+            else:
+                ptr = (ptr + batch_size) % self.num_negatives_val  # move pointer
         queue_ptr[0] = ptr
 
     def forward(self, img_q, img_k, queue):
@@ -165,32 +183,54 @@ class Mocov2(BaseComposition):
         return logits, labels, k
 
     def training_step(self, batch, batch_idx):
-        (img_1,img_2), (_) = batch
+        img_3, img_4 = None, None
+        if len(batch[0]) == 4: # instance case. hacky, sorry.
+            (img_1,img_2,img_3,img_4), (_) = batch
+            img_3 = img_3.flatten(0, 1)
+            img_4 = img_4.flatten(0, 1)
+        else:
+            (img_1,img_2), (_) = batch
 
         self._momentum_update_key_encoder()  # update the key encoder
         output, target, keys = self(img_q=img_1, img_k=img_2, queue=self.queue)
-        self._dequeue_and_enqueue(keys, queue=self.queue, queue_ptr=self.queue_ptr)  # dequeue and enqueue
-        loss = F.cross_entropy(output.float(), target.long())
-        acc1, acc5 = precision_at_k(output, target, top_k=(1, 5))
-
-        self.log("train/loss", loss, prog_bar=True)
-        self.log("train/acc1", acc1, prog_bar=True)
-        self.log("train/acc5", acc5, prog_bar=True)
-        return loss
+        self._dequeue_and_enqueue(keys, queue=self.queue, queue_ptr=self.queue_ptr,instance_step=False)  # dequeue and enqueue
+        loss_global = F.cross_entropy(output.float(), target.long())
+        self.log("train/loss_global", loss_global, prog_bar=True)
+        
+        if img_3 is not None: # instance case
+            output, target, keys = self(img_q=img_3, img_k=img_4, queue=self.instance_queue)
+            self._dequeue_and_enqueue(keys, queue=self.instance_queue, queue_ptr=self.instance_queue_ptr,instance_step=True)  # dequeue and enqueue
+            loss = F.cross_entropy(output.float(), target.long())
+            self.log("train/loss_instance", loss, prog_bar=True)
+            loss = loss_global + loss
+            self.log('train/loss', loss, prog_bar=True)
+            return loss
+        return loss_global
 
     def validation_step(self, batch, batch_idx):
-        (img_1, img_2), labels = batch
+        img_3, img_4 = None, None
+        if len(batch[0]) == 4: # instance case. hacky, sorry.
+            (img_1,img_2,img_3,img_4), (_) = batch
+            img_3 = img_3.flatten(0, 1)
+            img_4 = img_4.flatten(0, 1)
+        else:
+            (img_1,img_2), (_) = batch
 
         output, target, keys = self(img_q=img_1, img_k=img_2, queue=self.val_queue)
-        self._dequeue_and_enqueue(keys, queue=self.val_queue, queue_ptr=self.val_queue_ptr,val_step=True)  # dequeue and enqueue
-        loss = F.cross_entropy(output, target.long())
-
-        acc1, acc5 = precision_at_k(output, target, top_k=(1, 5))
-
-        self.log("val/loss", loss, prog_bar=True, on_epoch=True)
-        self.log("val/acc1", acc1, prog_bar=True, on_epoch=True)
-        self.log("val/acc5", acc5, prog_bar=True, on_epoch=True)
-        return loss
+        self._dequeue_and_enqueue(keys, queue=self.val_queue, queue_ptr=self.val_queue_ptr,val_step=True,instance_step=False)  # dequeue and enqueue
+        loss_global = F.cross_entropy(output, target.long())
+        self.log("val/loss_global", loss_global, prog_bar=True, on_epoch=True)
+        
+        if img_3 is not None: # instance case
+            output, target, keys = output, target, keys = self(img_q=img_3, img_k=img_4, queue=self.instance_queue)
+            self._dequeue_and_enqueue(keys, queue=self.instance_val_queue, queue_ptr=self.instance_val_queue_ptr,instance_step=True,val_step=True)  # dequeue and enqueue
+            loss = F.cross_entropy(output.float(), target.long())
+            self.log("val/loss_instance", loss, prog_bar=True)
+            loss = loss_global + loss
+            self.log('val/loss', loss, prog_bar=True)
+            return loss
+        self.log("val/loss", loss_global, prog_bar=True, on_epoch=True)
+        return loss_global
 
     @staticmethod
     def _use_ddp_or_ddp2(trainer: Trainer) -> bool:

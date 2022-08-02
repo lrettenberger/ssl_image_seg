@@ -26,6 +26,7 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
         labels_dmap_dir: str = "labels_dist_map",
         label_suffix="_label",
         label_prefix="",
+        instance_segmentation_head = False,
         **kwargs
     ):
         super().__init__(
@@ -38,6 +39,7 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             drop_last = drop_last,
             initial_labeled_ratio = initial_labeled_ratio,
         )
+        self.instance_segmentation_head = instance_segmentation_head
         if self.initial_labeled_ratio>=0:
             self.simulated_dataset = True
         else:
@@ -85,7 +87,8 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             labels_data_format=self.labels_data_format,
             labels_dmap_data_format=self.labels_dmap_data_format,
             label_suffix=self.label_suffix,
-            label_prefix=self.label_prefix
+            label_prefix=self.label_prefix,
+            instance_segmentation_head=self.instance_segmentation_head,
         )
 
         for _ in range(int(len(self.labeled_train_dataset) * (1 - self.dataset_size))):
@@ -102,7 +105,8 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             labels_data_format=self.labels_data_format,
             labels_dmap_data_format=self.labels_dmap_data_format,
             label_suffix=self.label_suffix,
-            label_prefix=self.label_prefix
+            label_prefix=self.label_prefix,
+            instance_segmentation_head=self.instance_segmentation_head,
         )
 
         self.unlabeled_train_dataset = BaseInstanceSegmentationDataset(
@@ -118,7 +122,9 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             labels_data_format=self.labels_data_format,
             labels_dmap_data_format=self.labels_dmap_data_format,
             label_suffix=self.label_suffix,
-            label_prefix=self.label_prefix
+            label_prefix=self.label_prefix,
+            instance_segmentation_head=self.instance_segmentation_head,
+
         )
         
         self.test_dataset = BaseInstanceSegmentationDataset(
@@ -131,7 +137,8 @@ class BaseInstanceSegmentationDataModule(BasePLDataModule):
             labels_data_format=self.labels_data_format,
             labels_dmap_data_format=self.labels_dmap_data_format,
             label_suffix=self.label_suffix,
-            label_prefix=self.label_prefix
+            label_prefix=self.label_prefix,
+            instance_segmentation_head=self.instance_segmentation_head,
         )
 
     def _determine_data_format(self):
