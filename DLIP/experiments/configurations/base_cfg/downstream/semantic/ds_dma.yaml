@@ -15,10 +15,10 @@ wandb.tags:
 # offline = runs in offline mode, writes all data to disk for later syncing to a server.
 # disabled = makes all calls to wandb api's noop's.
 wandb.mode:
-  value: disabled
+  value: online
 
 experiment.name:
-  value: first-shot
+  value: RandomInit
 # Seed of this experiment to ensure reproducibility.
 experiment.seed:
   value: 1234
