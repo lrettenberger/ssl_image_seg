@@ -18,7 +18,7 @@ class CVTrainer:
         self._trainer = trainer
         self._n_splits = n_splits
         self._kf = KFold(n_splits=self._n_splits, shuffle=True)
-        self.scores = {"val/loss_best": list(), "test/loss": list()}
+        self.scores = {"val/loss_best": list(), "test/score": list()}
 
     @staticmethod
     def _update_logger(logger: LightningLoggerBase, fold_idx: int):
@@ -92,7 +92,7 @@ class CVTrainer:
 
             _trainer.fit(_model, datamodule)
             self.scores["val/loss_best"].append(_trainer.final_scores["val/loss"]["best"])
-            self.scores['test/loss'].append(_trainer.test(_model, datamodule.test_dataloader())[0]['test/loss'])
+            self.scores['test/score'].append(_trainer.test(_model, datamodule.test_dataloader())[0]['test/score'])
 
 
             del _model, _trainer
@@ -128,5 +128,5 @@ class CVTrainer:
 
         wandb.log({"scores/mean_val_loss": np.mean(self.scores["val/loss_best"])})
         wandb.log({"scores/std_val_loss": np.std(self.scores["val/loss_best"])})
-        wandb.log({"scores/mean_test_loss": np.mean(self.scores["test/loss"])})
-        wandb.log({"scores/std_test_loss": np.std(self.scores["test/loss"])})
+        wandb.log({"scores/mean_test_score": np.mean(self.scores["test/score"])})
+        wandb.log({"scores/std_test_score": np.std(self.scores["test/score"])})

@@ -92,5 +92,8 @@ class CKASimplified(CKA):
                 cka_vals.append(float(torch.nan_to_num(self.cuda_cka.linear_CKA(X, Y))))
             cka_sum += sum(cka_vals) / len(cka_vals)
         return cka_sum / num_batches
+    
+    def export(self):
+        return self.hsic_matrix
                 
                 

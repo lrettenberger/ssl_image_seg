@@ -57,5 +57,5 @@ if 'train.cross_validation.n_splits' in cfg_yaml:
     cv_trainer.fit(model=model,datamodule=data)
 else:
     trainer.fit(model, data)
-    test_results = trainer.test(model=model, dataloaders=data.test_dataloader())
+    test_results = trainer.test(model=model,dataloaders=data.test_dataloader(),ckpt_path='best')
 wandb.finish()
