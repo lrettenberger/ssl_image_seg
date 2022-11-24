@@ -66,7 +66,7 @@ model.optimizer.lrs.params.min_lr:
 
 # Trainer Configuration
 train.trainer.max_epochs:
-  value: 1
+  value: 200
 train.trainer.num_sanity_val_steps:
   value: 0
 train.trainer.gpus:
@@ -84,7 +84,7 @@ data.datamodule.root_dirs:
     horeka: /lsdf/kit/iai/projects/iai-aida/Daten_Schilling/datasets/2022_DMA_Spheroid_Detection_split
     haicore_local: /home/iai/sc1357/data/2022_DMA_Spheroid_Detection_split
 data.datamodule.device:
-  value: local
+  value: haicore_local
 data.datamodule.arguments.dataset_size:
   value: 1.0
 data.datamodule.arguments.initial_labeled_ratio:

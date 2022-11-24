@@ -80,7 +80,7 @@ model.optimizer.lrs.params.min_lr:
 
 # Trainer Configuration
 train.trainer.max_epochs:
-  value: 1
+  value: 200
 train.trainer.num_sanity_val_steps:
   value: 0
 train.trainer.gpus:
@@ -98,7 +98,7 @@ data.datamodule.root_dirs:
     local: /home/ws/sc1357/data/datasets/2021_live_cell_SkBr3_cropped
     haicore_local: /home/iai/sc1357/data/2021_live_cell_SkBr3_cropped
 data.datamodule.device:
-  value: local
+  value: haicore_local
 data.datamodule.arguments.initial_labeled_ratio:
   value: 0.1
 data.datamodule.arguments.dataset_size:
