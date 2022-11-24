@@ -6,7 +6,6 @@ import cv2
 
 from DLIP.data.base_classes.base_dataset import BaseDataset
 
-
 class BaseSegmentationDataset(BaseDataset):
     def __init__(
         self,
@@ -71,6 +70,9 @@ class BaseSegmentationDataset(BaseDataset):
         sample_path = os.path.join(self.samples, f"{self.indices[idx]}.{self.samples_data_format}")
         sample_img = tifffile.imread(sample_path) if self.samples_data_format=="tif" else cv2.imread(sample_path,-1)
 
+        if not self.samples_data_format=="tif":
+            sample_img = cv2.cvtColor(sample_img, cv2.COLOR_BGR2RGB)
+
         sample_img_lst = []
         label_lst = []
         trafo_lst = []
@@ -79,6 +81,12 @@ class BaseSegmentationDataset(BaseDataset):
             # load label map
             label_path = os.path.join(self.labels, f"{self.label_prefix}{self.indices[idx]}{self.label_suffix}.{self.labels_data_format}")
             label_img = tifffile.imread(label_path) if self.labels_data_format=="tif" else cv2.imread(label_path,-1)
+
+            label_img = label_img.squeeze()
+
+            if "2022_DMA_Spheroid_Detection_split" in self.root_dir:
+                label_img = (label_img>0).astype(np.uint8)
+
             label_one_hot = np.zeros((label_img.shape[0],label_img.shape[1],len(self.map_look_up)), dtype=np.float32)
             for key, value in self.map_look_up.items():
                 label_one_hot[label_img==value,int(key)] = 1.0

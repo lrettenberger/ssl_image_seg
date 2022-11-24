@@ -2,12 +2,12 @@
 #  This is done to avoid defining the same variables in multiple places.
 
 wandb.project_name:
-  value: derma
+  value: ssl_seg_dma
 # The w&b user or group the project should belong to.
 wandb.entity:
-  value: marcelschilling
+  value: kit-iai-ibcs-dl
 wandb.notes:
-  value: First test
+  value: null
 wandb.tags:
   value: null
 # Valid values: online/enabled, offline, disabled
@@ -15,13 +15,13 @@ wandb.tags:
 # offline = runs in offline mode, writes all data to disk for later syncing to a server.
 # disabled = makes all calls to wandb api's noop's.
 wandb.mode:
-  value: online
+  value: disabled
 
 experiment.name:
   value: first-shot
 # Seed of this experiment to ensure reproducibility.
 experiment.seed:
-  value: 1337
+  value: 1234
 
 # Model Configuration
 model.name:
@@ -34,17 +34,16 @@ model.params.decoder_type:
   value: unet
 model.params.num_classes:
   value: 1
-model.params.decoder_filters:
-  value: [512, 256, 128, 64, 32]
 model.params.pretraining_weights:
   value: null
 model.params.encoder_frozen:
   value: false
+model.params.decoder_filters:
+  value: [512, 256, 128, 64, 32]
 model.params.ae_mode:
   value: false
 model.loss_fcn:
   value: DiceLoss
-
 
 # Optimizer
 model.optimizer.type:
@@ -57,7 +56,7 @@ model.optimizer.lrs.type:
 model.optimizer.lrs.params.factor:
   value: 0.5
 model.optimizer.lrs.params.patience:
-  value: 5
+  value: 20
 model.optimizer.lrs.params.verbose:
   value: false
 model.optimizer.lrs.params.cooldown:
@@ -67,7 +66,7 @@ model.optimizer.lrs.params.min_lr:
 
 # Trainer Configuration
 train.trainer.max_epochs:
-  value: 200
+  value: 1
 train.trainer.num_sanity_val_steps:
   value: 0
 train.trainer.gpus:
@@ -77,22 +76,29 @@ train.trainer.reload_dataloaders_every_epoch:
 
 # Data Configuration
 data.datamodule.name:
-  value: IsicDermoDataModule
+  value: BaseSegmentationDataModule
 data.datamodule.root_dirs:
   value: 
-    local: /home/ws/sc1357/data/2017_ISIC_Derma/
-    iai_gpu: 
-    horkea_local: /home/hk-project-sppo/sc1357/data/2017_ISIC_Derma_filter
+    local: /home/ws/sc1357/data/datasets/2022_DMA_Spheroid_BF/2022_DMA_Spheroid_Detection_split/
+    iai_gpu: /home/ws/sc1357/lsdf/iai-aida/Daten_Schilling/datasets/2022_DMA_Spheroid_Detection_split
+    horeka: /lsdf/kit/iai/projects/iai-aida/Daten_Schilling/datasets/2022_DMA_Spheroid_Detection_split
+    haicore_local: /home/iai/sc1357/data/2022_DMA_Spheroid_Detection_split
 data.datamodule.device:
-  value: horkea_local
+  value: local
 data.datamodule.arguments.dataset_size:
   value: 1.0
+data.datamodule.arguments.initial_labeled_ratio:
+  value: 0.1
+data.datamodule.arguments.map_look_up:
+  value: {0: 1}
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
+data.datamodule.arguments.n_classes:
+  value: 1
 data.datamodule.arguments.batch_size:
-  value: 8
+  value: 4
 data.datamodule.arguments.num_workers:
-  value: 19
+  value: 12
 
 # Callbacks Configuration
 train.callbacks.save_k_top_models:
@@ -100,7 +106,7 @@ train.callbacks.save_k_top_models:
 train.callbacks.early_stopping_enabled:
   value: true
 train.callbacks.early_stopping_patience:
-  value: 100
+  value: 40
 train.callbacks.best_metrics_log_enabled:
   value: true
 train.callbacks.log_best_metric_dict:
@@ -116,7 +122,7 @@ data.img_processing.img_type:
 data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:
-  value: [256,256]
+  value: [128,128]
 
 # Augmentations
 data.img_processing.aug1.replay_processing_pipeline:
@@ -125,12 +131,6 @@ data.img_processing.aug1.replay_processing_pipeline:
 # Flip
 data.img_processing.aug1.aug_flip_prob:
   value: 0.5
-
-# Gaussian Blur
-data.img_processing.aug1.gaussian_blur_prop:
-  value: 0.25
-data.img_processing.aug1.gaussian_blur_sigma:
-  value: [0.1,1.0]
 
 # Scale/Rotate/Shift
 data.img_processing.aug1.aug_shift_scale_rotate_prob:

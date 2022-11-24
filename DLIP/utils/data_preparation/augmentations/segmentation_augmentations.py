@@ -58,10 +58,11 @@ class ImgSegProcessingPipeline:
             else:
                 size = self.params.img_size[1] if self.params.img_size.shape == (2,2) else self.params.img_size
 
-            transform.append(
-                    A.Resize(height=size[0],
-                            width=size[1])
-                )
+            if size[0] is not None:
+                transform.append(
+                        A.Resize(height=size[0],
+                                width=size[1])
+                    )
         return self.get_transform(transform, replay=False)
 
     def make_aug_transform(self,params=None):

@@ -3,12 +3,9 @@ import glob
 import os
 import numpy as np
 import cv2
-import torch
-import matplotlib.pyplot as plt
 from DLIP.utils.helper_functions.gray_level_check import gray_redundand
 
 from DLIP.data.base_classes.base_dataset import BaseDataset
-from DLIP.utils.helper_functions.split_image import slice_image
 
 
 class BaseInstanceSegmentationDataset(BaseDataset):
@@ -27,9 +24,8 @@ class BaseInstanceSegmentationDataset(BaseDataset):
         return_trafos=False,
         label_suffix="_label",
         label_prefix="",
-        instance_segmentation_head = False,
+        **kwargs
     ):
-        self.instance_segmentation_head = instance_segmentation_head
         self.labels_available = labels_available
         self.root_dir = root_dir
         self.samples_dir = samples_dir
@@ -80,10 +76,13 @@ class BaseInstanceSegmentationDataset(BaseDataset):
         # load sample
         sample_path = os.path.join(self.samples, f"{self.indices[idx]}.{self.samples_data_format}")
         sample_img = tifffile.imread(sample_path) if self.samples_data_format=="tif" else cv2.imread(sample_path,-1)
-        
-        if sample_img.ndim>2 and gray_redundand(sample_img):
-            sample_img = sample_img[:,:,0]
 
+        if not self.samples_data_format=="tif":
+            sample_img = cv2.cvtColor(sample_img, cv2.COLOR_BGR2RGB)
+        
+        if sample_img.ndim==2:
+            sample_img = cv2.cvtColor(sample_img, cv2.COLOR_GRAY2RGB)
+    
         sample_img_lst = []
         label_lst = []
         trafo_lst = []
@@ -113,15 +112,6 @@ class BaseInstanceSegmentationDataset(BaseDataset):
             sample_img_lst.append(im)
             label_lst.append(lbl)
             trafo_lst.append(trafo)
-
-        # hacky
-        if self.instance_segmentation_head:
-            sample_img_lst[-1] =  torch.Tensor(slice_image(sample_img_lst[-1].permute(1,2,0).numpy())).permute(0,3,1,2)
-            sample_img_lst[-2] = torch.Tensor(slice_image(sample_img_lst[-2].permute(1,2,0).numpy())).permute(0,3,1,2)
-        else:
-            if len(sample_img_lst) == 4:
-                del sample_img_lst[-1]
-                del sample_img_lst[-2]
 
         if len(sample_img_lst) == 1:
             sample_img_lst = sample_img_lst[0]
