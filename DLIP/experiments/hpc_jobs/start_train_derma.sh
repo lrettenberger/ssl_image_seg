@@ -1,22 +1,22 @@
 #!/bin/bash
-#SBATCH --partition=normal
-#SBATCH --time=8:00:00
+#SBATCH --partition=advanced
+#SBATCH --time=12:00:00
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=152
+#SBATCH --ntasks-per-node=256
 #SBATCH --ntasks-per-core=2
-#SBATCH --gres=gpu:full:4
+#SBATCH --gres=gpu:full:8
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=marcel.schilling@kit.edu
 #SBATCH --error=%j_error.txt
 #SBATCH --output=%j_output.txt
-#SBATCH --job-name=dma
-#SBATCH --mem=501600mb
+#SBATCH --job-name=derma
+#SBATCH --mem=1000000mb
 
 export CFG_FILE="/home/iai/sc1357/devel/self-supervised-biomedical-image-segmentation/DLIP/experiments/configurations/base_cfg/downstream/semantic/ds_derma.yaml"
 export RESULT_DIR="/home/iai/sc1357/data/2022_11_24_ssl"
 export SWEEPID="kit-iai-ibcs-dl/ssl_seg_derma/88c7x5t6"
 
-NUM_GPUS=4
+NUM_GPUS=8
 NUM_COUNTS=1
 
 # remove all modules
