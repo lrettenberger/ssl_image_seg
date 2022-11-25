@@ -56,8 +56,6 @@ class UnetSemantic(UnetBase):
         loss_n_c    = self.loss_fcn(y_pred, y_true)
         loss        = torch.mean(loss_n_c)
         self.log("val/loss", loss, prog_bar=True, on_epoch=True)
-        if batch_idx == 0:
-            self.log_imgs(x,y_pred)
         return  loss
 
     def test_step(self, batch, batch_idx):
