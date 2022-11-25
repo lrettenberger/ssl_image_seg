@@ -51,5 +51,8 @@ trainer = load_trainer(
 )
 
 trainer.fit(model, data)
-test_results = trainer.test(model=model,dataloaders=data.test_dataloader(),ckpt_path='best')
+try:
+    test_results = trainer.test(model=model,dataloaders=data.test_dataloader(),ckpt_path='best')
+except:
+    pass
 wandb.finish()
