@@ -1,22 +1,31 @@
+#  This file describes configuration details which are used by all experiments in this example project.
+#  This is done to avoid defining the same variables in multiple places.
+
+wandb.project_name:
+  value: ssl_inst_seg_live_cell
+# The w&b user or group the project should belong to.
+wandb.entity:
+  value: kit-iai-ibcs-dl
+wandb.notes:
+  value: null
+wandb.tags:
+  value: null
+# Valid values: online/enabled, offline, disabled
+# online/enabled = default, runs in online mode. Both enabled and online can be used.
+# offline = runs in offline mode, writes all data to disk for later syncing to a server.
+# disabled = makes all calls to wandb api's noop's.
+wandb.mode:
+  value: online
+
 experiment.name:
-  value: first-shot
+  value: PreText
 # Seed of this experiment to ensure reproducibility.
 experiment.seed:
-  value: 1337
+  value: 1234
 
 # Model Configuration
 model.name:
-  value: MoDeCO
-model.params.num_negatives:
-  value: 474
-model.params.num_negatives_val:
-  value: 118
-model.params.activated_layers:
-  value: [0,3,4,5]
-model.params.loss_weights:
-  value: [1.0, 0.1, 0.1, 0.4, 0.7, 1.0]
-model.params.global_feature_space:
-  value: true
+  value: SimCLR
 
 # Optimizer
 model.optimizer.type:
@@ -49,23 +58,20 @@ data.datamodule.name:
   value: BaseInstanceSegmentationDataModule
 data.datamodule.root_dirs:
   value: 
-    local: /lsdf/Daten_Schilling/datasets/2018_MoNuSeg_cropped/
-    iai_gpu: 
+    horeka: /lsdf/kit/iai/projects/iai-aida/Daten_Schilling/datasets/2021_live_cell_SkBr3_cropped
+    iai_gpu: /home/ws/sc1357/lsdf/iai-aida/Daten_Schilling/datasets/2021_live_cell_SkBr3_cropped
+    local: /home/ws/sc1357/data/datasets/2021_live_cell_SkBr3_cropped
+    haicore_local: /home/iai/sc1357/data/2021_live_cell_SkBr3_cropped
 data.datamodule.device:
-  value: 
-    local
-data.datamodule.arguments.initial_labeled_ratio:
+  value: haicore_local
+data.datamodule.arguments.dataset_size:
   value: 1.0
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
-  value: 25
-data.datamodule.arguments.dataset_size:
-  value: 1.0
-data.datamodule.arguments.label_suffix:
-  value: ''
-data.datamodule.arguments.instance_segmentation_head:
-  value: false
+  value: 32
+data.datamodule.arguments.num_workers:
+  value: 12
 
 
 # Callbacks Configuration
@@ -74,7 +80,7 @@ train.callbacks.save_k_top_models:
 train.callbacks.early_stopping_enabled:
   value: false
 train.callbacks.early_stopping_patience:
-  value: 1000
+  value: 40
 train.callbacks.best_metrics_log_enabled:
   value: true
 train.callbacks.log_best_metric_dict:
@@ -84,14 +90,13 @@ train.callbacks.epoch_duration_enabled:
 
 # General Augmentations
 data.img_processing.norm_type:
-  value: per_image
-
+  value: per_image_mean_std
 data.img_processing.img_type:
   value: rgb_8_bit
 data.img_processing.replay_processing_pipeline:
   value: false
 data.img_processing.img_size:
-  value: [256, 256]
+  value: [256,256]
 
 # Augmentations
 data.img_processing.aug1.replay_processing_pipeline:
