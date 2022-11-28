@@ -3,6 +3,7 @@ import glob
 import os
 import numpy as np
 import cv2
+import torch
 from DLIP.utils.helper_functions.gray_level_check import gray_redundand
 
 from DLIP.data.base_classes.base_dataset import BaseDataset
@@ -24,6 +25,7 @@ class BaseInstanceSegmentationDataset(BaseDataset):
         return_trafos=False,
         label_suffix="_label",
         label_prefix="",
+        instance_segmentation_head=False,
         **kwargs
     ):
         self.labels_available = labels_available
@@ -38,6 +40,7 @@ class BaseInstanceSegmentationDataset(BaseDataset):
         self.transforms = transforms
         self.label_suffix=label_suffix
         self.label_prefix=label_prefix
+        self.instance_segmentation_head=instance_segmentation_head
 
         if transforms is None:
                 self.transforms = lambda x, y: (x,y,0)
@@ -112,6 +115,15 @@ class BaseInstanceSegmentationDataset(BaseDataset):
             sample_img_lst.append(im)
             label_lst.append(lbl)
             trafo_lst.append(trafo)
+
+        if self.instance_segmentation_head:
+            sample_img_lst[-1] =  torch.Tensor(slice_image(sample_img_lst[-1].permute(1,2,0).numpy())).permute(0,3,1,2)
+            sample_img_lst[-2] = torch.Tensor(slice_image(sample_img_lst[-2].permute(1,2,0).numpy())).permute(0,3,1,2)
+        else:
+            if len(sample_img_lst) == 4:
+                del sample_img_lst[-1]
+                del sample_img_lst[-2]
+
 
         if len(sample_img_lst) == 1:
             sample_img_lst = sample_img_lst[0]
