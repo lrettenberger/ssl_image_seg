@@ -1,0 +1,320 @@
+wandb.project_name:
+  value: isic-derma-exp1
+# The w&b user or group the project should belong to.
+wandb.entity:
+  value: lucare
+wandb.notes:
+  value: First complete durchlauf
+wandb.tags:
+  value: null
+# Valid values: online/enabled, offline, disabled
+# online/enabled = default, runs in online mode. Both enabled and online can be used.
+# offline = runs in offline mode, writes all data to disk for later syncing to a server.
+# disabled = makes all calls to wandb api's noop's.
+wandb.mode:
+  value: online
+
+experiment.name:
+  value: first-shot
+# Seed of this experiment to ensure reproducibility.
+experiment.seed:
+  value: 1337
+
+# Model Configuration
+model.name:
+  value: DenseCL
+model.params.num_negatives:
+  value: 500
+model.params.num_negatives_val:
+  value: 125
+
+# Optimizer
+model.optimizer.type:
+  value: SGD
+model.optimizer.params.lr:
+  value: 0.001
+model.optimizer.params.momentum:
+  value: 0.9
+model.optimizer.params.weight_decay:
+  value: 0.0001
+# LR Scheduler
+model.optimizer.lrs.type:
+  value: CosineAnnealingLR
+model.optimizer.lrs.params.T_max:
+  value: 2000
+
+
+# Trainer Configuration
+train.trainer.max_epochs:
+  value: 2
+  # CHANHE CHANGE CHANGEEEEE
+train.trainer.num_sanity_val_steps:
+  value: 0
+train.trainer.gpus:
+  value: 1
+train.trainer.reload_dataloaders_every_epoch:
+  value: false
+
+# Data Configuration
+data.datamodule.name:
+  value: BaseSegmentationDataModule
+data.datamodule.root_dirs:
+  value: 
+    local: /home/ws/kg2371/datasets/Breastcancer_Segmentation
+    iai_gpu: 
+data.datamodule.device:
+  value: 
+    local
+data.datamodule.arguments.initial_labeled_ratio:
+  value: 1.0
+data.datamodule.arguments.val_to_train_ratio:
+  value: 0.2
+data.datamodule.arguments.batch_size:
+  value: 32
+data.datamodule.arguments.dataset_size:
+  value: 1.0
+data.datamodule.arguments.n_classes:
+  value: 1
+data.datamodule.arguments.label_suffix:
+  value: ''
+
+
+# Callbacks Configuration
+train.callbacks.save_k_top_models:
+  value: 3
+train.callbacks.early_stopping_enabled:
+  value: false
+train.callbacks.early_stopping_patience:
+  value: 40
+train.callbacks.best_metrics_log_enabled:
+  value: true
+train.callbacks.log_best_metric_dict:
+  value: {"val/loss":"min"}
+train.callbacks.epoch_duration_enabled:
+  value: true
+
+# General Augmentations
+# data.img_processing.norm_type:
+#   value: per_image
+
+data.img_processing.img_type:
+  value: rgb_8_bit
+data.img_processing.replay_processing_pipeline:
+  value: false
+data.img_processing.img_size:
+  value: [256, 256]
+
+# Augmentations
+data.img_processing.aug1.replay_processing_pipeline:
+  value: false
+
+# Random Crop
+data.img_processing.aug1.random_resized_propability:
+  value: 1.0
+data.img_processing.aug1.random_resized_crop_size:
+  value: [256, 256]
+data.img_processing.aug1.random_resized_scale:
+# min: [0.70,1.00]
+# max: [0.90,1.00]
+  value: [0.6, 1.0]
+data.img_processing.aug1.random_resized_ratio:
+# min: [0.7,1.33]
+# max: [0.9,1.25]
+  value: [1.0, 1.0]
+
+# Color Jitter
+data.img_processing.aug1.color_jitter_prob:
+  value: 0.8
+data.img_processing.aug1.color_jitter_brightness:
+# min: 0.5
+# max: 0.9
+  value: 0.4
+data.img_processing.aug1.color_jitter_contrast:
+# min: 0.5
+# max: 0.9
+  value: 0.4
+data.img_processing.aug1.color_jitter_saturation:
+# min: 0.5
+# max: 0.9
+  value: 0.4
+data.img_processing.aug1.color_jitter_hue:
+# min: 0.1
+# max: 0.3
+  value: 0.1
+
+# Flip
+data.img_processing.aug1.aug_flip_prob:
+  value: 0.5
+
+# Gaussian Blur
+# data.img_processing.aug1.gaussian_blur_prop:
+#   value: 0.5
+# data.img_processing.aug1.gaussian_blur_sigma:
+#   value: [0.1,2.0]
+
+# ---- AUG2
+
+# # Random Crop
+# data.img_processing.aug2.random_resized_propability:
+#   value: 1.0
+# data.img_processing.aug2.random_resized_crop_size:
+#   value: [256, 256]
+# data.img_processing.aug1.random_resized_scale:
+#   value: [0.6, 1.0]
+# data.img_processing.aug1.random_resized_ratio:
+#   value: [1.0, 1.0]
+
+# # Color Jitter
+# data.img_processing.aug2.color_jitter_prob:
+#   value: 0.8
+# data.img_processing.aug2.color_jitter_brightness:
+#   value: 0.4
+# data.img_processing.aug2.color_jitter_contrast:
+#   value: 0.4
+# data.img_processing.aug2.color_jitter_saturation:
+#   value: 0.4
+# data.img_processing.aug2.color_jitter_hue:
+#   value: 0.1
+
+# # Flip
+# data.img_processing.aug2.aug_flip_prob:
+#   value: 0.5
+
+#  # Validation Augmentations
+# data.img_processing.validation_aug.random_resized_propability:
+#   value: 1.0
+# data.img_processing.validation_aug.random_resized_crop_size:
+#   value: [256, 256]
+# data.img_processing.validation_aug.random_resized_scale:
+#   value: [0.75, 1.0]
+# data.img_processing.validation_aug.random_resized_ratio:
+#   value: [1.0, 1.0]
+
+# # Gaussian Blur
+# # data.img_processing.aug2.gaussian_blur_prop:
+# #   value: 0.5
+# # data.img_processing.aug2.gaussian_blur_sigma:
+# #   value: [0.1,2.0]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# downstream
+
+# Model Configuration
+downstream.model.name:
+  value: UnetSemantic
+downstream.model.params.in_channels:
+  value: 3
+downstream.model.params.encoder_type:
+  value: resnet50
+downstream.model.params.decoder_type:
+  value: unet
+downstream.model.params.num_classes:
+  value: 1
+downstream.model.params.pretraining_weights:
+  value: null
+downstream.model.params.decoder_filters:
+  value: [512, 256, 128, 64, 32]
+downstream.model.params.encoder_frozen:
+  value: false
+downstream.model.params.ae_mode:
+  value: false
+downstream.model.loss_fcn:
+  value: DiceLoss
+
+
+# Optimizer
+downstream.model.optimizer.type:
+  value: Adam
+downstream.model.optimizer.params.lr:
+  value: 0.001
+# LR Scheduler
+downstream.model.optimizer.lrs.type:
+  value: ReduceLROnPlateau
+downstream.model.optimizer.lrs.params.factor:
+  value: 0.5
+downstream.model.optimizer.lrs.params.patience:
+  value: 20
+downstream.model.optimizer.lrs.params.verbose:
+  value: false
+downstream.model.optimizer.lrs.params.cooldown:
+  value: 0
+downstream.model.optimizer.lrs.params.min_lr:
+  value: 0.00001
+
+# Trainer Configuration
+downstream.train.trainer.max_epochs:
+  value: 200
+downstream.train.trainer.num_sanity_val_steps:
+  value: 0
+downstream.train.trainer.gpus:
+  value: 1
+downstream.train.trainer.reload_dataloaders_every_epoch:
+  value: false
+
+# Data Configuration
+downstream.data.datamodule.name:
+  value: BaseSegmentationDataModule
+downstream.data.datamodule.root_dirs:
+  value: 
+    local: /home/ws/kg2371/datasets/Breastcancer_Segmentation
+    iai_gpu: 
+    horkea_local: /home/hk-project-sppo/sc1357/data/2017_ISIC_Derma_filter
+downstream.data.datamodule.device:
+  value: local
+downstream.data.datamodule.arguments.dataset_size:
+  value: 1.0
+downstream.data.datamodule.arguments.val_to_train_ratio:
+  value: 0.2
+downstream.data.datamodule.arguments.batch_size:
+  value: 4
+downstream.data.datamodule.arguments.num_workers:
+  value: 0
+downstream.data.datamodule.arguments.initial_labeled_ratio:
+  value: 0.08
+downstream.data.datamodule.arguments.n_classes:
+  value: 1
+downstream.data.datamodule.arguments.label_suffix:
+  value: ''
+
+# Callbacks Configuration
+downstream.train.callbacks.save_k_top_models:
+  value: 1
+downstream.train.callbacks.early_stopping_enabled:
+  value: false
+downstream.train.callbacks.early_stopping_patience:
+  value: 30
+downstream.train.callbacks.best_metrics_log_enabled:
+  value: true
+downstream.train.callbacks.log_best_metric_dict:
+  value: {"val/loss":"min"}
+downstream.train.callbacks.epoch_duration_enabled:
+  value: true
+
+downstream.data.img_processing.img_type:
+  value: rgb_8_bit
+downstream.data.img_processing.replay_processing_pipeline:
+  value: false
+downstream.data.img_processing.img_size:
+  value: [256,256]
+
+# Augmentations
+downstream.data.img_processing.aug1.replay_processing_pipeline:
+  value: false
+
+# Flip
+downstream.data.img_processing.aug1.aug_flip_prob:
+  value: 0.5

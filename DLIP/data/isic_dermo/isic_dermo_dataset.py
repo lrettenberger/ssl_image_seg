@@ -48,25 +48,33 @@ class IsicDermoDataset(BaseDataset):
         self.classifier_mode = classifier_mode
         if self.classifier_mode:
             # 0,1 -> seborrheic_keratosis
-            # 0,0 -> Unknown
+            # 0,0 -> Unknown / nevus
             # 1,0 -> Melanoma
             # one hot = [Melanoma,seborrheic_keratosis,nevus]
+            # temp:   0        1          2
+            #       Melanoma,Seborreheic,unknown
+            num_melanoma = 0
+            num_keratosis = 0
+            num_unknown = 0
             classification_classes = (pd.read_csv(os.path.join(root_dir,'ground_truth_labels.csv')).set_index('image_id')).to_dict('image_id')
             self.classification_classes_one_hot = {}
             for key in classification_classes.keys():
                 item = classification_classes[key]
-                if classify_melanoma:
-                    # Melanoma detection 
-                    if item['melanoma'] == 1.0:
-                        self.classification_classes_one_hot[key] = np.array([1]).astype(np.float32)
-                    else:
-                        self.classification_classes_one_hot[key] = np.array([0]).astype(np.float32)
-                else:
-                    # seborrheic_keratosis detection
-                    if item['seborrheic_keratosis'] == 1.0:
-                        self.classification_classes_one_hot[key] = np.array([1]).astype(np.float32)
-                    else:
-                        self.classification_classes_one_hot[key] = np.array([0]).astype(np.float32)
+                # Melanoma detection 
+                if item['melanoma'] == 1.0 and item['seborrheic_keratosis'] == 0.0:
+                    self.classification_classes_one_hot[key] = np.array([0]).astype(np.float32)
+                if item['melanoma'] == 0.0 and item['seborrheic_keratosis'] == 0.0:
+                    self.classification_classes_one_hot[key] = np.array([2]).astype(np.float32)
+                if item['melanoma'] == 0.0 and item['seborrheic_keratosis'] == 1.0:
+                    self.classification_classes_one_hot[key] = np.array([1]).astype(np.float32)
+                
+                if item['melanoma'] == 1.0 and item['seborrheic_keratosis'] == 0.0:
+                    num_melanoma+=1
+                if item['melanoma'] == 0.0 and item['seborrheic_keratosis'] == 0.0:
+                    num_unknown+=1
+                if item['melanoma'] == 0.0 and item['seborrheic_keratosis'] == 1.0:
+                    num_keratosis+=1
+
         self.indices = []
         if not empty_dataset:
             self.indices = [i.split(f'.{self.samples_data_format}')[0].split('_')[-1] for i in all_samples_sorted]
