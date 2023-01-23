@@ -46,8 +46,7 @@ model.optimizer.lrs.params.T_max:
 
 # Trainer Configuration
 train.trainer.max_epochs:
-  value: 2
-  # CHANHE CHANGE CHANGEEEEE
+  value: 2000
 train.trainer.num_sanity_val_steps:
   value: 0
 train.trainer.gpus:
@@ -59,6 +58,7 @@ train.trainer.reload_dataloaders_every_epoch:
 data.datamodule.name:
   value: BaseSegmentationDataModule
 data.datamodule.root_dirs:
+# UPDATE UPDATE UPDATE UPDATE UPDATE UPDATEUPDATE UPDATE UPDATEUPDATE UPDATE UPDATE UPDATE UPDATE UPDATEUPDATE UPDATE UPDATE
   value: 
     local: /home/ws/kg2371/datasets/Breastcancer_Segmentation
     iai_gpu: 
@@ -269,6 +269,7 @@ downstream.train.trainer.reload_dataloaders_every_epoch:
 downstream.data.datamodule.name:
   value: BaseSegmentationDataModule
 downstream.data.datamodule.root_dirs:
+# UPDATE UPDATE UPDATEUPDATE UPDATE UPDATEUPDATE UPDATE UPDATEUPDATE UPDATE UPDATEUPDATE UPDATE UPDATEUPDATE UPDATE UPDATE
   value: 
     local: /home/ws/kg2371/datasets/Breastcancer_Segmentation
     iai_gpu: 
