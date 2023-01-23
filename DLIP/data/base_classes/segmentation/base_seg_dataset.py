@@ -6,7 +6,6 @@ import cv2
 
 from DLIP.data.base_classes.base_dataset import BaseDataset
 
-
 class BaseSegmentationDataset(BaseDataset):
     def __init__(
         self,
@@ -70,6 +69,9 @@ class BaseSegmentationDataset(BaseDataset):
         # load sample
         sample_path = os.path.join(self.samples, f"{self.indices[idx]}.{self.samples_data_format}")
         sample_img = tifffile.imread(sample_path) if self.samples_data_format=="tif" else cv2.imread(sample_path,-1)
+
+        if not self.samples_data_format=="tif":
+            sample_img = cv2.cvtColor(sample_img, cv2.COLOR_BGR2RGB)
 
         sample_img_lst = []
         label_lst = []

@@ -56,8 +56,6 @@ class UnetSemantic(UnetBase):
         loss_n_c    = self.loss_fcn(y_pred, y_true)
         loss        = torch.mean(loss_n_c)
         self.log("val/loss", loss, prog_bar=True, on_epoch=True)
-        if batch_idx == 0:
-            self.log_imgs(x,y_pred)
         return  loss
 
     def test_step(self, batch, batch_idx):
@@ -68,11 +66,3 @@ class UnetSemantic(UnetBase):
         loss        = torch.mean(loss_n_c)
         self.log("test/score", 1-loss, prog_bar=True, on_epoch=True, on_step=False)
         return 1-loss
-
-    def log_imgs(self,x,y):
-        x_wandb = [wandb.Image(x_item.permute(1,2,0).cpu().detach().numpy()) for x_item in x]
-        y_wandb = [wandb.Image(y_item.permute(1,2,0).cpu().detach().numpy()) for y_item in y]
-        wandb.log({
-            "x": x_wandb,
-            "y": y_wandb
-        })

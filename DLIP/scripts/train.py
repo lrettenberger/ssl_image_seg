@@ -1,6 +1,3 @@
-import matplotlib
-matplotlib.use('Agg')
-
 import os
 import wandb
 import logging
@@ -15,7 +12,6 @@ from DLIP.utils.loading.parse_arguments import parse_arguments
 from DLIP.utils.loading.prepare_directory_structure import prepare_directory_structure
 
 from DLIP.utils.loading.split_parameters import split_parameters
-from DLIP.utils.cross_validation.cv_trainer import CVTrainer
 
 logging.basicConfig(level=logging.INFO)
 logging.info("Initalizing model")
@@ -47,15 +43,13 @@ parameters_splitted = split_parameters(config, ["model", "train", "data"])
 model = load_model(parameters_splitted["model"])
 data = load_data_module(parameters_splitted["data"])
 
-trainer = load_trainer(train_params=parameters_splitted['train'], result_dir=experiment_dir, run_name=wandb.run.name, data=data,config=config)
+trainer = load_trainer(
+    train_params=parameters_splitted['train'], 
+    result_dir=experiment_dir, 
+    run_name=wandb.run.name, 
+    data=data,config=config
+)
 
-if 'train.cross_validation.n_splits' in cfg_yaml:
-    cv_trainer = CVTrainer(
-        trainer=trainer,
-        n_splits=cfg_yaml['train.cross_validation.n_splits']['value']
-    )
-    cv_trainer.fit(model=model,datamodule=data)
-else:
-    trainer.fit(model, data)
-    test_results = trainer.test(ckpt_path='best')
+trainer.fit(model, data)
+test_results = trainer.test(ckpt_path='best')
 wandb.finish()

@@ -1,0 +1,41 @@
+#SBATCH --partition=normal
+#SBATCH --time=8:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=152
+#SBATCH --ntasks-per-core=2
+#SBATCH --gres=gpu:full:4
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=marcel.schilling@kit.edu
+#SBATCH --error=%j_error.txt
+#SBATCH --output=%j_output.txt
+#SBATCH --job-name=anno_var
+#SBATCH --constraint=LSDF
+#SBATCH --mem=501600mb
+
+
+#SBATCH --partition=advanced
+#SBATCH --time=12:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=256
+#SBATCH --ntasks-per-core=2
+#SBATCH --gres=gpu:full:8
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=marcel.schilling@kit.edu
+#SBATCH --error=%j_error.txt
+#SBATCH --output=%j_output.txt
+#SBATCH --job-name=anno_var
+#SBATCH --constraint=LSDF
+#SBATCH --mem=1000000mb
+
+#SBATCH --partition=normal
+#SBATCH --time=8:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=152
+#SBATCH --ntasks-per-core=2
+#SBATCH --gres=gpu:4g.20gb:4
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=marcel.schilling@kit.edu
+#SBATCH --error=%j_error.txt
+#SBATCH --output=%j_output.txt
+#SBATCH --job-name=anno_var
+#SBATCH --mem=501600mb
