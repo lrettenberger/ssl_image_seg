@@ -35,8 +35,8 @@ model.params.decoder_type:
 model.params.decoder_filters:
   value: [512, 256, 128, 64, 32]
 model.params.pretraining_weights:
-  #value: /home/ws/kg2371/projects/self-supervised-biomedical-image-segmentation/results/first-shot/BaseInstanceSegmentationDataModule/DenseCL/0055/dnn_weights-v5.ckpt
-  value: /home/ws/kg2371/lsdf/Daten_Schilling/2022_SSL_experiments/ssl_weights/monuseg/barlow_twins/dnn_weights.ckpt
+  #value: /home/ws/kg2371/projects/self-supervised-biomedical-image-segmentation/results/first-shot/BaseInstanceSegmentationDataModule/UnetAE/0006/dnn_weights.ckpt
+  value: null
 model.params.encoder_frozen:
   value: false
 model.loss_fcn:
@@ -92,27 +92,29 @@ data.datamodule.name:
   value: BaseInstanceSegmentationDataModule
 data.datamodule.root_dirs:
   value: 
-    local: /home/ws/kg2371/lsdf/Daten_Schilling/datasets/2018_MoNuSeg_cropped/
+    local: /home/ws/kg2371/datasets/2018_MoNuSeg_cropped
     iai_gpu:
     horeka: 
     horeka_local: /home/hk-project-sppo/sc1357/data/2018_MoNuSeg_cropped
 data.datamodule.device:
   value: local
 data.datamodule.arguments.dataset_size:
-  value: 0.01
+  value: 1.0
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
   value: 2
 data.datamodule.arguments.num_workers:
-  value: 19
+  value: 0
 data.datamodule.arguments.label_suffix:
   value: ""
+data.datamodule.arguments.initial_labeled_ratio:
+  value: 1.0
 
 
 # Callbacks Configuration
 train.callbacks.save_k_top_models:
-  value: 0
+  value: 1
 train.callbacks.early_stopping_enabled:
   value: true
 train.callbacks.early_stopping_patience:

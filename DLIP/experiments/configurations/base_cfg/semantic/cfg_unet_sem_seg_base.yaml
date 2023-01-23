@@ -5,7 +5,7 @@ wandb.project_name:
   value: derma
 # The w&b user or group the project should belong to.
 wandb.entity:
-  value: marcelschilling
+  value: lucare
 wandb.notes:
   value: First test
 wandb.tags:
@@ -21,7 +21,7 @@ experiment.name:
   value: first-shot
 # Seed of this experiment to ensure reproducibility.
 experiment.seed:
-  value: 1337
+  value: 42
 
 # Model Configuration
 model.name:
@@ -29,13 +29,15 @@ model.name:
 model.params.in_channels:
   value: 3
 model.params.encoder_type:
-  value: unet
+  value: resnet50
 model.params.decoder_type:
   value: unet
 model.params.num_classes:
   value: 1
 model.params.pretraining_weights:
-  value: null
+  value: /home/ws/kg2371/projects/self-supervised-biomedical-image-segmentation/results/first-shot/BaseSegmentationDataModule/DenseCL/0005/dnn_weights-v4.ckpt
+model.params.decoder_filters:
+  value: [512, 256, 128, 64, 32]
 model.params.encoder_frozen:
   value: false
 model.params.ae_mode:
@@ -55,7 +57,7 @@ model.optimizer.lrs.type:
 model.optimizer.lrs.params.factor:
   value: 0.5
 model.optimizer.lrs.params.patience:
-  value: 5
+  value: 20
 model.optimizer.lrs.params.verbose:
   value: false
 model.optimizer.lrs.params.cooldown:
@@ -75,10 +77,10 @@ train.trainer.reload_dataloaders_every_epoch:
 
 # Data Configuration
 data.datamodule.name:
-  value: IsicDermoDataModule
+  value: BaseSegmentationDataModule
 data.datamodule.root_dirs:
   value: 
-    local: /home/ws/sc1357/data/2017_ISIC_Derma/
+    local: /home/ws/kg2371/datasets/Breastcancer_Segmentation
     iai_gpu: 
     horkea_local: /home/hk-project-sppo/sc1357/data/2017_ISIC_Derma_filter
 data.datamodule.device:
@@ -90,15 +92,21 @@ data.datamodule.arguments.val_to_train_ratio:
 data.datamodule.arguments.batch_size:
   value: 4
 data.datamodule.arguments.num_workers:
-  value: 19
+  value: 0
+data.datamodule.arguments.initial_labeled_ratio:
+  value: 0.64 #weniger hier
+data.datamodule.arguments.n_classes:
+  value: 1
+data.datamodule.arguments.label_suffix:
+  value: ''
 
 # Callbacks Configuration
 train.callbacks.save_k_top_models:
   value: 1
 train.callbacks.early_stopping_enabled:
-  value: true
+  value: false
 train.callbacks.early_stopping_patience:
-  value: 100
+  value: 30
 train.callbacks.best_metrics_log_enabled:
   value: true
 train.callbacks.log_best_metric_dict:
@@ -107,8 +115,8 @@ train.callbacks.epoch_duration_enabled:
   value: true
 
 # General Augmentations
-data.img_processing.norm_type:
-  value: per_image_mean_std
+# data.img_processing.norm_type:
+#   value: per_image_mean_std
 data.img_processing.img_type:
   value: rgb_8_bit
 data.img_processing.replay_processing_pipeline:
@@ -125,25 +133,25 @@ data.img_processing.aug1.aug_flip_prob:
   value: 0.5
 
 # Gaussian Blur
-data.img_processing.aug1.gaussian_blur_prop:
-  value: 0.25
-data.img_processing.aug1.gaussian_blur_sigma:
-  value: [0.1,1.0]
+# data.img_processing.aug1.gaussian_blur_prop:
+#   value: 0.25
+# data.img_processing.aug1.gaussian_blur_sigma:
+#   value: [0.1,1.0]
 
 # Scale/Rotate/Shift
-data.img_processing.aug1.aug_shift_scale_rotate_prob:
-  value: 0.25
-data.img_processing.aug1.aug_shift_scale_rotate_shift_lim:
-  value: 0.05
-data.img_processing.aug1.aug_shift_scale_rotate_scale_lim:
-  value: 0.05
-data.img_processing.aug1.aug_shift_scale_rotate_rot_lim:
-  value: 5
+# data.img_processing.aug1.aug_shift_scale_rotate_prob:
+#   value: 0.25
+# data.img_processing.aug1.aug_shift_scale_rotate_shift_lim:
+#   value: 0.05
+# data.img_processing.aug1.aug_shift_scale_rotate_scale_lim:
+#   value: 0.05
+# data.img_processing.aug1.aug_shift_scale_rotate_rot_lim:
+#   value: 5
 
 # Contrast/Brightness Adjustment
-data.img_processing.aug1.aug_rand_brightness_contrast_prob:
-  value: 0.25
-data.img_processing.aug1.aug_rand_brightness_contrast_brightness_limit:
-  value: 0.1
-data.img_processing.aug1.aug_rand_brightness_contrast_contrast_limit:
-  value: 0.1
+# data.img_processing.aug1.aug_rand_brightness_contrast_prob:
+#   value: 0.25
+# data.img_processing.aug1.aug_rand_brightness_contrast_brightness_limit:
+#   value: 0.1
+# data.img_processing.aug1.aug_rand_brightness_contrast_contrast_limit:
+#   value: 0.1

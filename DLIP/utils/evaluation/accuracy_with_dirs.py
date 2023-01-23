@@ -26,6 +26,73 @@ from DLIP.utils.loading.parse_arguments import parse_arguments
 from DLIP.utils.loading.prepare_directory_structure import prepare_directory_structure
 from DLIP.utils.loading.split_parameters import split_parameters
 from DLIP.utils.cross_validation.cv_trainer import CVTrainer
+from pytorch_grad_cam import GradCAM
+from pathlib import Path
+
+
+class SemanticSegmentationTarget:
+    """ Gets a binary spatial mask and a category,
+        And return the sum of the category scores,
+        of the pixels in the mask. """
+    def __init__(self, mask):
+        self.mask = mask.cuda()
+
+    def __call__(self, model_output):
+        return (model_output * self.mask).sum()
+
+def calculate_cams(model,data,directory):
+
+    j=0
+    for batch in tqdm(data.test_dataloader()):
+        x,y_true = batch
+        y_pred = model(x.cuda())
+
+        #target_layers = [model.composition[0].backbone[4][0]] #resnet
+        target_layers = [model.composition[0].backbone[4]] # unet
+        
+        targets = [SemanticSegmentationTarget(y_true[0].permute(2,0,1))]
+
+        Path(f"{directory}/EigenCAM").mkdir(parents=True, exist_ok=True)
+        Path(f"{directory}/FullGrad").mkdir(parents=True, exist_ok=True)
+        Path(f"{directory}/XGradCAM").mkdir(parents=True, exist_ok=True)
+
+        for i in range(len(x)):
+            if j == 10 or j == 11 or j == 13:
+                targets = [SemanticSegmentationTarget(y_true[i].permute(2,0,1))]
+                with EigenCAM(model=model,
+                            target_layers=target_layers,
+                            use_cuda=torch.cuda.is_available()) as cam:
+                    grayscale_cam = cam(input_tensor=x[i:i+1],targets=targets)[0, :]
+                    cam_image = show_cam_on_image((x[i].permute(1,2,0)).numpy(), grayscale_cam, use_rgb=True)
+                    cv2.imwrite(f'{directory}/EigenCAM/{j}.png',cam_image)
+                    cv2.imwrite(f'{directory}/EigenCAM/{j}_pred_mask.png',((y_pred[i]>0.5).permute(1,2,0).detach().cpu().numpy()*255).astype(np.uint8))
+                    cv2.imwrite(f'{directory}/EigenCAM/{j}_true_mask.png',(y_true[i].detach().cpu().numpy()*255).astype(np.uint8))
+                with FullGrad(model=model,
+                            target_layers=target_layers,
+                            use_cuda=torch.cuda.is_available()) as cam:
+                    grayscale_cam = cam(input_tensor=x[i:i+1],targets=targets)[0, :]
+                    cam_image = show_cam_on_image((x[i].permute(1,2,0)).numpy(), grayscale_cam, use_rgb=True)
+                    cv2.imwrite(f'{directory}/FullGrad/{j}.png',cam_image)
+                    cv2.imwrite(f'{directory}/FullGrad/{j}_pred_mask.png',((y_pred[i]>0.5).permute(1,2,0).detach().cpu().numpy()*255).astype(np.uint8))
+                    cv2.imwrite(f'{directory}/FullGrad/{j}_true_mask.png',(y_true[i].detach().cpu().numpy()*255).astype(np.uint8))
+                with XGradCAM(model=model,
+                            target_layers=target_layers,
+                            use_cuda=torch.cuda.is_available()) as cam:
+                    grayscale_cam = cam(input_tensor=x[i:i+1],targets=targets)[0, :]
+                    cam_image = show_cam_on_image((x[i].permute(1,2,0)).numpy(), grayscale_cam, use_rgb=True)
+                    cv2.imwrite(f'{directory}/XGradCAM/{j}.png',cam_image)
+                    cv2.imwrite(f'{directory}/XGradCAM/{j}_pred_mask.png',((y_pred[i]>0.5).permute(1,2,0).detach().cpu().numpy()*255).astype(np.uint8))
+                    cv2.imwrite(f'{directory}/XGradCAM/{j}_true_mask.png',(y_true[i].detach().cpu().numpy()*255).astype(np.uint8))
+            j+=1
+            if j>13:
+                break
+        if j>13:
+                break
+
+
+
+
+
 
 def calculate_accuracies(num_classes,directory,model,data,channels):
     Path(f"{directory}/missclassifies").mkdir(parents=True, exist_ok=True)

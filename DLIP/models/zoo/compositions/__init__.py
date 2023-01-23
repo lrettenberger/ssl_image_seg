@@ -20,3 +20,4 @@ from .unet_semantic import UnetSemantic
 from .simclr import SimCLR
 from .barlow_twins import BarlowTwins
 from .byol import BYOL
+from .unet_ae import UnetAE

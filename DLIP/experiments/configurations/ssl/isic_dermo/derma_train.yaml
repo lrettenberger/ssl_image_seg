@@ -6,28 +6,17 @@ experiment.seed:
 
 # Model Configuration
 model.name:
-  value: MoDeCo
+  value: BarlowTwins
 model.params.num_negatives:
   value: 1600
 model.params.num_negatives_val:
   value: 400
-# global, layer1,layer2,layer3,layer4,layer5
-model.params.activated_layers:
-  #value: [0,1,2,3,4,5]
-  #value: [0,4,5]
-  #value: [0,3,4,5]
-model.params.loss_weights:
-  #value: [1.0, 0.1, 0.1, 0.4, 0.7, 1.0]
-  #value: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-model.params.global_feature_space:
-  #value: true
-  #value: false
 
 # Optimizer
 model.optimizer.type:
   value: SGD
 model.optimizer.params.lr:
-  value: 0.03
+  value: 0.001
 model.optimizer.params.momentum:
   value: 0.9
 model.optimizer.params.weight_decay:
@@ -64,14 +53,14 @@ data.datamodule.arguments.initial_labeled_ratio:
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
-  value: 25
+  value: 32
 data.datamodule.arguments.dataset_size:
   value: 1.0
 
 
 # Callbacks Configuration
 train.callbacks.save_k_top_models:
-  value: 10
+  value: 3
 train.callbacks.early_stopping_enabled:
   value: false
 train.callbacks.early_stopping_patience:
@@ -84,8 +73,8 @@ train.callbacks.epoch_duration_enabled:
   value: true
 
 # General Augmentations
-data.img_processing.norm_type:
-  value: per_image
+# data.img_processing.norm_type:
+#   value: per_image
 
 data.img_processing.img_type:
   value: rgb_8_bit
