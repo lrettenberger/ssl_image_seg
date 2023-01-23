@@ -1,5 +1,5 @@
 wandb.project_name:
-  value: isic-derma-exp1
+  value: derma
 # The w&b user or group the project should belong to.
 wandb.entity:
   value: lucare
