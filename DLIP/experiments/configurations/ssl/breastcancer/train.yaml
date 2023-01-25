@@ -46,7 +46,7 @@ model.optimizer.lrs.params.T_max:
 
 # Trainer Configuration
 train.trainer.max_epochs:
-  value: 2000
+  value: 1500
 train.trainer.num_sanity_val_steps:
   value: 0
 train.trainer.gpus:
@@ -70,7 +70,7 @@ data.datamodule.arguments.initial_labeled_ratio:
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
-  value: 32
+  value: 64
 data.datamodule.arguments.dataset_size:
   value: 1.0
 data.datamodule.arguments.n_classes:
@@ -114,87 +114,63 @@ data.img_processing.aug1.random_resized_propability:
 data.img_processing.aug1.random_resized_crop_size:
   value: [256, 256]
 data.img_processing.aug1.random_resized_scale:
-# min: [0.70,1.00]
-# max: [0.90,1.00]
-  value: [0.6, 1.0]
+  value: [0.8, 1.0]
 data.img_processing.aug1.random_resized_ratio:
-# min: [0.7,1.33]
-# max: [0.9,1.25]
-  value: [1.0, 1.0]
+  value: [0.7, 1.27]
 
 # Color Jitter
 data.img_processing.aug1.color_jitter_prob:
   value: 0.8
 data.img_processing.aug1.color_jitter_brightness:
-# min: 0.5
-# max: 0.9
-  value: 0.4
+  value: 0.8510230035937307
 data.img_processing.aug1.color_jitter_contrast:
-# min: 0.5
-# max: 0.9
-  value: 0.4
+  value: 0.6091514096912497
 data.img_processing.aug1.color_jitter_saturation:
-# min: 0.5
-# max: 0.9
-  value: 0.4
+  value: 0.6580427268447091
 data.img_processing.aug1.color_jitter_hue:
-# min: 0.1
-# max: 0.3
-  value: 0.1
+  value: 0.1329111234749142
 
 # Flip
 data.img_processing.aug1.aug_flip_prob:
   value: 0.5
 
-# Gaussian Blur
-# data.img_processing.aug1.gaussian_blur_prop:
-#   value: 0.5
-# data.img_processing.aug1.gaussian_blur_sigma:
-#   value: [0.1,2.0]
-
 # ---- AUG2
 
-# # Random Crop
-# data.img_processing.aug2.random_resized_propability:
-#   value: 1.0
-# data.img_processing.aug2.random_resized_crop_size:
-#   value: [256, 256]
-# data.img_processing.aug1.random_resized_scale:
-#   value: [0.6, 1.0]
-# data.img_processing.aug1.random_resized_ratio:
-#   value: [1.0, 1.0]
+# Random Crop
+data.img_processing.aug2.random_resized_propability:
+  value: 1.0
+data.img_processing.aug2.random_resized_crop_size:
+  value: [256, 256]
+data.img_processing.aug2.random_resized_scale:
+  value: [0.8, 1.0]
+data.img_processing.aug2.random_resized_ratio:
+  value: [0.7, 1.27]
 
-# # Color Jitter
-# data.img_processing.aug2.color_jitter_prob:
-#   value: 0.8
-# data.img_processing.aug2.color_jitter_brightness:
-#   value: 0.4
-# data.img_processing.aug2.color_jitter_contrast:
-#   value: 0.4
-# data.img_processing.aug2.color_jitter_saturation:
-#   value: 0.4
-# data.img_processing.aug2.color_jitter_hue:
-#   value: 0.1
+# Color Jitter
+data.img_processing.aug2.color_jitter_prob:
+  value: 0.8
+data.img_processing.aug2.color_jitter_brightness:
+  value: 0.8510230035937307
+data.img_processing.aug2.color_jitter_contrast:
+  value: 0.6091514096912497
+data.img_processing.aug2.color_jitter_saturation:
+  value: 0.6580427268447091
+data.img_processing.aug2.color_jitter_hue:
+  value: 0.1329111234749142
 
-# # Flip
-# data.img_processing.aug2.aug_flip_prob:
-#   value: 0.5
+# Flip
+data.img_processing.aug2.aug_flip_prob:
+  value: 0.5
 
-#  # Validation Augmentations
-# data.img_processing.validation_aug.random_resized_propability:
-#   value: 1.0
-# data.img_processing.validation_aug.random_resized_crop_size:
-#   value: [256, 256]
-# data.img_processing.validation_aug.random_resized_scale:
-#   value: [0.75, 1.0]
-# data.img_processing.validation_aug.random_resized_ratio:
-#   value: [1.0, 1.0]
-
-# # Gaussian Blur
-# # data.img_processing.aug2.gaussian_blur_prop:
-# #   value: 0.5
-# # data.img_processing.aug2.gaussian_blur_sigma:
-# #   value: [0.1,2.0]
+ # Validation Augmentations
+data.img_processing.validation_aug.random_resized_propability:
+  value: 1.0
+data.img_processing.validation_aug.random_resized_crop_size:
+  value: [256, 256]
+data.img_processing.validation_aug.random_resized_scale:
+  value: [0.85, 1.0]
+data.img_processing.validation_aug.random_resized_ratio:
+  value: [1.0, 1.0]
 
 
 
