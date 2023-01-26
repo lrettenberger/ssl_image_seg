@@ -35,7 +35,7 @@ model.params.decoder_type:
 model.params.num_classes:
   value: 1
 model.params.pretraining_weights:
-  value: imagenet
+  value: null
 model.params.decoder_filters:
   value: [512, 256, 128, 64, 32]
 model.params.encoder_frozen:
@@ -75,6 +75,13 @@ train.trainer.gpus:
 train.trainer.reload_dataloaders_every_epoch:
   value: false
 
+# additional config for ssl downstream
+checkpoints_base_path:
+  value: 
+    local: /srv/DenseCL/
+    haicore: /home/iai/sc1357/data/2023_01_25_ssl/
+# end
+
 # Data Configuration
 data.datamodule.name:
   value: BaseSegmentationDataModule
@@ -93,7 +100,7 @@ data.datamodule.arguments.batch_size:
 data.datamodule.arguments.num_workers:
   value: 0
 data.datamodule.arguments.initial_labeled_ratio:
-  value: 0.64
+  value: 0.16
 data.datamodule.arguments.n_classes:
   value: 1
 data.datamodule.arguments.label_suffix:

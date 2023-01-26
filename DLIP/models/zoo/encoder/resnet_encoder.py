@@ -93,6 +93,13 @@ class ResNetEncoder(BasicEncoder):
                     for key in encoder_q_keys:
                         filtered_weights[key.replace('encoder_q.0.backbone.','')] = weights[key]
                     weights = filtered_weights
+                elif 'composition.0.backbone.3.0.conv1.weight' in weights:
+                    load_weights_directly_into_encoder = True
+                    encoder_q_keys = [x for x in weights.keys() if '.backbone.' in x]
+                    filtered_weights = {}
+                    for key in encoder_q_keys:
+                        filtered_weights[key.replace('composition.0.backbone.','')] = weights[key]
+                    weights = filtered_weights
                 if 'backbone.conv1.weight' in weights:
                     # We assume its moco type if we have a encoder_q
                     # Also we need the encoder_q key for the weigths to be extractable

@@ -38,6 +38,10 @@ config = initialize_wandb(
 
 seed_everything(seed=config['experiment.seed'])
 
+# put togheter pretraining weight path
+config.update({'model.params.pretraining_weights' : os.path.join(config['checkpoints_base_path'][config['data.datamodule.device']],config['model.params.pretraining_weights'])},allow_val_change=True)
+
+
 parameters_splitted = split_parameters(config, ["model", "train", "data"])
 
 model = load_model(parameters_splitted["model"])
