@@ -45,7 +45,7 @@ seed_everything(seed=config['experiment.seed'])
 parameters_splitted = split_parameters(config, ["model", "train", "data"])
 
 # put togheter pretraining weight path
-if config['model.params.pretraining_weights']:
+if config['model.params.pretraining_weights'] and config['model.params.pretraining_weights'] != 'imagenet':
     parameters_splitted["model"]['params.pretraining_weights'] = os.path.join(config['checkpoints_base_path'][config['data.datamodule.device']],config['model.params.pretraining_weights'])
 
 model = load_model(parameters_splitted["model"])
