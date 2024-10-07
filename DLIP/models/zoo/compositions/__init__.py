@@ -21,3 +21,4 @@ from .simclr import SimCLR
 from .barlow_twins import BarlowTwins
 from .byol import BYOL
 from .unet_ae import UnetAE
+from .convnextv2 import ConvNeXtV2Base, ConvNeXtV2Huge, ConvNeXtV2Large,ConvNeXtV2Tiny,ConvNeXtV2Nano,ConvNeXtV2Pico,ConvNeXtV2Femto,ConvNeXtV2Atto

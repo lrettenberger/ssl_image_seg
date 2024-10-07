@@ -115,8 +115,7 @@ class DenseCL(Mocov2):
         
         return loss
 
-    def training_step(self, batch, batch_idx):
-
+    def training_step(self, batch, batch_idx):        
         img_3, img_4 = None, None
         if len(batch[0]) == 4: # instance case. hacky, sorry.
             (img_1,img_2,img_3,img_4), (_) = batch
@@ -124,7 +123,6 @@ class DenseCL(Mocov2):
             img_4 = img_4.flatten(0, 1)
         else:
             (img_1,img_2), (_) = batch
-
         self._momentum_update_key_encoder()  # update the key encoder
         loss = self(img_q=img_1, img_k=img_2, queue=self.queue, dense_queue=self.dense_queue)
         

@@ -68,9 +68,14 @@ class BaseSegmentationDataset(BaseDataset):
     def __getitem__(self, idx):
         # load sample
         sample_path = os.path.join(self.samples, f"{self.indices[idx]}.{self.samples_data_format}")
-        sample_img = tifffile.imread(sample_path) if self.samples_data_format=="tif" else cv2.imread(sample_path,-1)
+        sample_img = tifffile.imread(sample_path) if self.samples_data_format=="tiff" else cv2.imread(sample_path,-1)
+        
+        if len(sample_img.shape) == 3:
+            sample_img = sample_img[:,:,0]
+        
+        sample_img = np.expand_dims(sample_img,2)
 
-        if not self.samples_data_format=="tif":
+        if not self.samples_data_format=="tiff":
             sample_img = cv2.cvtColor(sample_img, cv2.COLOR_BGR2RGB)
 
         sample_img_lst = []
@@ -80,8 +85,11 @@ class BaseSegmentationDataset(BaseDataset):
         if self.labels_available:
             # load label map
             label_path = os.path.join(self.labels, f"{self.label_prefix}{self.indices[idx]}{self.label_suffix}.{self.labels_data_format}")
-            label_img = tifffile.imread(label_path) if self.labels_data_format=="tif" else cv2.imread(label_path,-1)
-            label_one_hot = np.expand_dims(label_img,2).astype(np.float32)
+            label_img = tifffile.imread(label_path) if self.labels_data_format=="tiff" else cv2.imread(label_path,-1)
+            if len(label_img.shape) == 3:
+                label_img = label_img[:,:,0]
+            label_one_hot = label_img
+            #label_one_hot = np.expand_dims(label_img,2).astype(np.float32)
             #label_one_hot = np.zeros((label_img.shape[0],label_img.shape[1],len(self.map_look_up)), dtype=np.float32)
             #for key, value in self.map_look_up.items():
             #    label_one_hot[label_img==value,int(key)] = 1.0

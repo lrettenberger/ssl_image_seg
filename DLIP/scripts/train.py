@@ -45,8 +45,8 @@ seed_everything(seed=config['experiment.seed'])
 parameters_splitted = split_parameters(config, ["model", "train", "data"])
 
 # put togheter pretraining weight path
-if config['model.params.pretraining_weights'] and config['model.params.pretraining_weights'] != 'imagenet':
-    parameters_splitted["model"]['params.pretraining_weights'] = os.path.join(config['checkpoints_base_path'][config['data.datamodule.device']],config['model.params.pretraining_weights'])
+# if config['model.params.pretraining_weights'] and config['model.params.pretraining_weights'] != 'imagenet':
+#     parameters_splitted["model"]['params.pretraining_weights'] = os.path.join(config['checkpoints_base_path'][config['data.datamodule.device']],config['model.params.pretraining_weights'])
 
 model = load_model(parameters_splitted["model"])
 data = load_data_module(parameters_splitted["data"])
@@ -55,9 +55,13 @@ trainer = load_trainer(
     train_params=parameters_splitted['train'], 
     result_dir=experiment_dir, 
     run_name=wandb.run.name, 
-    data=data,config=config
+    data=data,config=config,
+    distributed=config['distributed'],
+    gpus_per_node=config['gpus_per_node'],
+    num_nodes=config['num_nodes']
+    
 )
 
 trainer.fit(model, data)
-test_results = trainer.test(ckpt_path='best')
+#test_results = trainer.test(ckpt_path='best')
 wandb.finish()

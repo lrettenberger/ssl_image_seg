@@ -25,20 +25,25 @@ def load_data_module(data_params: dict,  do_val_init=True):
     # extract additional validation time transforms
     val_augs = None
     if 'validation_aug' in transformations:
-        val_augs = transformations['validation_aug']
+        # Delete after training, lol
+        val_augs = split_parameters(dict_to_config(transformations['validation_aug']))
+        del val_augs['other']
         del transformations['validation_aug']
+        # val_augs = transformations['validation_aug']
 
     train_transforms = []
     val_transforms = []
     test_transforms = []
     if len(transformations.values()) > 0:
-        for img_processing in transformations.values():
+        for key in transformations.keys():
+            img_processing = transformations[key]
+            val_process = val_augs[key]
             append_to_transforms(
                                 dict(general_configuration, **img_processing),
                                 train_transforms,
                                 val_transforms,
                                 test_transforms,
-                                val_augs)
+                                val_process)
     else:
         append_to_transforms(
                             general_configuration,

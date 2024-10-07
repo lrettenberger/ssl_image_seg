@@ -1,8 +1,17 @@
+distributed:
+  value: false
+gpus_per_node:
+  value: 4
+num_nodes:
+  value: 1
+
+
+
 wandb.project_name:
   value: derma
 # The w&b user or group the project should belong to.
 wandb.entity:
-  value: lucare
+  value: justtheluca
 wandb.notes:
   value: First complete durchlauf
 wandb.tags:
@@ -12,7 +21,7 @@ wandb.tags:
 # offline = runs in offline mode, writes all data to disk for later syncing to a server.
 # disabled = makes all calls to wandb api's noop's.
 wandb.mode:
-  value: online
+  value: disabled
 
 experiment.name:
   value: first-shot
@@ -23,10 +32,14 @@ experiment.seed:
 # Model Configuration
 model.name:
   value: DenseCL
+model.params.base_encoder:
+  value: ConvNeXtV2Huge
+
+# dataset size
 model.params.num_negatives:
-  value: 500
+  value: 20549
 model.params.num_negatives_val:
-  value: 125
+  value: 4167
 
 # Optimizer
 model.optimizer.type:
@@ -41,12 +54,12 @@ model.optimizer.params.weight_decay:
 model.optimizer.lrs.type:
   value: CosineAnnealingLR
 model.optimizer.lrs.params.T_max:
-  value: 2000
+  value: 8000
 
 
 # Trainer Configuration
 train.trainer.max_epochs:
-  value: 1500
+  value: 8000
 train.trainer.num_sanity_val_steps:
   value: 0
 train.trainer.gpus:
@@ -60,7 +73,7 @@ data.datamodule.name:
 data.datamodule.root_dirs:
 # UPDATE UPDATE UPDATE UPDATE UPDATE UPDATEUPDATE UPDATE UPDATEUPDATE UPDATE UPDATE UPDATE UPDATE UPDATEUPDATE UPDATE UPDATE
   value: 
-    local: /home/ws/kg2371/datasets/Breastcancer_Segmentation
+    local: /home/ws/kg2371/datasets/sem_segmentation_densecl/
     iai_gpu: 
 data.datamodule.device:
   value: 
@@ -70,7 +83,7 @@ data.datamodule.arguments.initial_labeled_ratio:
 data.datamodule.arguments.val_to_train_ratio:
   value: 0.2
 data.datamodule.arguments.batch_size:
-  value: 40
+  value: 1
 data.datamodule.arguments.dataset_size:
   value: 1.0
 data.datamodule.arguments.n_classes:
@@ -101,90 +114,53 @@ data.img_processing.img_type:
   value: rgb_8_bit
 data.img_processing.replay_processing_pipeline:
   value: false
+
 data.img_processing.img_size:
-  value: [256, 256]
+  value: [640,640]
 
 # Augmentations
 data.img_processing.aug1.replay_processing_pipeline:
   value: false
 
 # Random Crop
-data.img_processing.aug1.random_resized_propability:
-  value: 1.0
-data.img_processing.aug1.random_resized_crop_size:
-  value: [256, 256]
-data.img_processing.aug1.random_resized_scale:
-  value: [0.8, 1.0]
-data.img_processing.aug1.random_resized_ratio:
-  value: [0.7, 1.27]
-
-# Color Jitter
-data.img_processing.aug1.color_jitter_prob:
-  value: 0.8
-data.img_processing.aug1.color_jitter_brightness:
-  value: 0.8510230035937307
-data.img_processing.aug1.color_jitter_contrast:
-  value: 0.6091514096912497
-data.img_processing.aug1.color_jitter_saturation:
-  value: 0.6580427268447091
-data.img_processing.aug1.color_jitter_hue:
-  value: 0.1329111234749142
-
-# Flip
 data.img_processing.aug1.aug_flip_prob:
   value: 0.5
+data.img_processing.aug1.aug_rand_brightness_contrast_brightness_limit:
+  value: 0.2
+data.img_processing.aug1.aug_rand_brightness_contrast_contrast_limit:
+  value: 0.2
+data.img_processing.aug1.aug_rand_brightness_contrast_prob:
+  value: 1.0
+data.img_processing.aug1.aug_shift_scale_rotate_prob:
+  value: 1.0
+data.img_processing.aug1.aug_shift_scale_rotate_rot_lim:
+  value: 20
+data.img_processing.aug1.aug_shift_scale_rotate_scale_lim:
+  value: 0.2
+data.img_processing.aug1.aug_shift_scale_rotate_shift_lim:
+  value: 0.15
+data.img_processing.aug1.gaussian_blur_prop:
+  value: 1.0
+data.img_processing.aug1.gaussian_blur_sigma:
+  value: [0.1, 1.0]
 
 # ---- AUG2
 
 # Random Crop
-data.img_processing.aug2.random_resized_propability:
-  value: 1.0
-data.img_processing.aug2.random_resized_crop_size:
-  value: [256, 256]
-data.img_processing.aug2.random_resized_scale:
-  value: [0.8, 1.0]
-data.img_processing.aug2.random_resized_ratio:
-  value: [0.7, 1.27]
-
-# Color Jitter
-data.img_processing.aug2.color_jitter_prob:
-  value: 0.8
-data.img_processing.aug2.color_jitter_brightness:
-  value: 0.8510230035937307
-data.img_processing.aug2.color_jitter_contrast:
-  value: 0.6091514096912497
-data.img_processing.aug2.color_jitter_saturation:
-  value: 0.6580427268447091
-data.img_processing.aug2.color_jitter_hue:
-  value: 0.1329111234749142
-
-# Flip
 data.img_processing.aug2.aug_flip_prob:
   value: 0.5
 
  # Validation Augmentations
-data.img_processing.validation_aug.random_resized_propability:
+data.img_processing.validation_aug.aug1.center_crop_size:
+  value: [640, 640]
+
+data.img_processing.validation_aug.aug2.center_crop_size:
+  value: [640, 640]
+data.img_processing.validation_aug.aug2.aug_flip_prob:
   value: 1.0
-data.img_processing.validation_aug.random_resized_crop_size:
-  value: [256, 256]
-data.img_processing.validation_aug.random_resized_scale:
-  value: [0.85, 1.0]
-data.img_processing.validation_aug.random_resized_ratio:
-  value: [1.0, 1.0]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+# data.img_processing.validation_aug.aug_flip_prob:
+#   value: 0.5
 
 
 # downstream

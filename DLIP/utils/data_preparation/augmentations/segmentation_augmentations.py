@@ -4,7 +4,33 @@ from albumentations.pytorch.transforms import ToTensorV2
 import numpy as np
 
 from DLIP.utils.data_preparation.norm_std_mean import norm_std_mean
-from DLIP.utils.data_preparation.norm_min_max import norm_min_max
+
+from albumentations.core.transforms_interface import ImageOnlyTransform,to_tuple
+
+class GreyImage(ImageOnlyTransform):
+    
+    def __init__(self, alpha=0.5, always_apply=False, p=0.5):
+            super(GreyImage, self).__init__(always_apply=always_apply,p=p)
+            if isinstance(alpha, (int, float)):
+                self.alpha = tuple((0.0,alpha))
+            elif isinstance(alpha, (list, tuple)):
+                self.alpha = alpha
+            else:
+                raise Exception('Error in GreyImage: alpha needs to be list,tuple, or scalar.')
+
+    def apply(self, img, **params):
+        set_alpha = np.random.uniform(self.alpha[0],self.alpha[1])
+        return ((img * (1-set_alpha)) + (125 * (set_alpha))).astype(np.uint8)
+
+    def apply_to_bbox(self, bbox, **params):
+        raise Exception('not implemented')
+
+    def apply_to_keypoint(self, keypoint, **params):
+         raise Exception('not implemented')
+
+    def get_transform_init_args_names(self):
+        return ("alpha")
+
 
 def list_transform(argument):
     return list(argument) if isinstance(argument,np.ndarray) else argument
@@ -40,7 +66,7 @@ class ImgSegProcessingPipeline:
     def make_val_aug_transform(self, params):
         self.trafo_dict["val_aug"] = self.make_aug_transform(params=params)
 
-    def make_pre_transform(self, mode="train"):
+    def make_pre_transform(self):
         transform = []
 
         if self.params.img_type == "mono_16_bit":
@@ -53,16 +79,16 @@ class ImgSegProcessingPipeline:
             self.params.max_value = 255.0
 
         if hasattr(self.params, 'img_size'):
-            if mode=="train":
-                size = self.params.img_size[0] if self.params.img_size.shape == (2,2) else self.params.img_size
-            else:
-                size = self.params.img_size[1] if self.params.img_size.shape == (2,2) else self.params.img_size
+            transform.append(
+                A.Resize(height=self.params.img_size[0],
+                         width=self.params.img_size[1])
+            )
+        if hasattr(self.params, 'center_crop_size'):
+            transform.append(
+                A.CenterCrop(height=self.params.center_crop_size[0],
+                         width=self.params.center_crop_size[1],always_apply=True)
+            )
 
-            if size[0] is not None:
-                transform.append(
-                        A.Resize(height=size[0],
-                                width=size[1])
-                    )
         return self.get_transform(transform, replay=False)
 
     def make_aug_transform(self,params=None):
@@ -87,7 +113,7 @@ class ImgSegProcessingPipeline:
                 enabled=False
             if enabled:
                 transform.append(
-                    A.Emboss(
+                    A.IAAEmboss(
                         alpha=params.emboss_alpha,
                         p=params.emboss_prob,
                         strength=list_transform(params.emboss_strength)
@@ -143,30 +169,18 @@ class ImgSegProcessingPipeline:
                                 p=params.random_resized_propability
                             )
                         )
-        if  hasattr(params, 'random_crop_size') and \
-            hasattr(params, 'random_crop_probability'):
+        if  hasattr(params, 'random_crop') and \
+            hasattr(params, 'random_crop_size') and \
+            hasattr(params, 'random_crop_propability'):
                 enabled=True
-                if hasattr(params,'random_crop_crop_enabled') and not params.random_crop_crop_enabled:
+                if hasattr(params,'random_crop') and not params.random_crop:
                     enabled=False
                 if enabled:
                     transform.append(
                             A.RandomCrop(
                                 height=params.random_crop_size[0],
                                 width=params.random_crop_size[1],
-                                p=params.random_crop_probability
-                            )
-                        )
-        if  hasattr(params, 'center_crop_size') and \
-            hasattr(params, 'center_crop_probability'):
-                enabled=True
-                if hasattr(params,'center_crop_crop_enabled') and not params.center_crop_crop_enabled:
-                    enabled=False
-                if enabled:
-                    transform.append(
-                            A.CenterCrop(
-                                height=params.center_crop_size[0],
-                                width=params.center_crop_size[1],
-                                p=params.center_crop_probability
+                                p=params.random_crop_propability
                             )
                         )
 
@@ -190,7 +204,8 @@ class ImgSegProcessingPipeline:
                     )
 
         if  hasattr(params, 'gaussian_blur_prop') and \
-            hasattr(params, 'gaussian_blur_sigma'):
+            hasattr(params, 'gaussian_blur_sigma_limit'):
+            #hasattr(params, 'std_dev_range')
                 enabled=True
                 if hasattr(params,'gaussian_blur_enabled') and not params.gaussian_blur_enabled:
                     enabled=False
@@ -199,9 +214,18 @@ class ImgSegProcessingPipeline:
                         A.GaussianBlur(
                             p=params.gaussian_blur_prop,
                             blur_limit = 0,
-                            sigma_limit=tuple(params.gaussian_blur_sigma)
+                            sigma_limit=params.gaussian_blur_sigma_limit
                         )
-                    )   
+                    )  
+                    
+        if  hasattr(params, 'gray_image_alpha') and \
+            hasattr(params, 'gray_image_prop'):
+                transform.append(
+                    GreyImage(
+                        p=params.gray_image_prop,
+                        alpha=params.gray_image_alpha,
+                    )
+                )  
 
         if  hasattr(params, 'to_gray_prob'):
                 enabled=True
@@ -283,12 +307,6 @@ class ImgSegProcessingPipeline:
         if self.trafo_dict["val_aug"] is not None:
              trafo_dict["aug"] = self.trafo_dict["val_aug"]
         return trafo_dict
-    
-    def get_test_transform(self):
-        trafo_dict = self.trafo_dict.copy()
-        trafo_dict["pre"] = self.make_pre_transform(mode="test")
-        trafo_dict["aug"] = None
-        return trafo_dict
 
     def get_train_transform(self):
         trafo_dict = self.trafo_dict.copy()
@@ -333,11 +351,9 @@ class SemanticSegmentationProccesor:
             transformations = []
 
         if self.transform["norm"] is not None:
-            if self.transform["norm"]["type"]=="per_image_mean_std":
+            if self.transform["norm"]["type"]=="per_image":
                 sample_img = norm_std_mean(sample_img)
-            elif self.transform["norm"]["type"]=="per_image_min_max":
-                sample_img = norm_min_max(sample_img)
-            elif self.transform["norm"]["type"]=="per_dataset_mean_std":
+            elif self.transform["norm"]["type"]=="per_dataset":
                 sample_img = norm_std_mean(
                     sample_img, 
                     mean=self.transform["norm"]["params"]["mean"],

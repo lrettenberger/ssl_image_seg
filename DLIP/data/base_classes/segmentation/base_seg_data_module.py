@@ -74,7 +74,7 @@ class BaseSegmentationDataModule(BasePLDataModule):
         self.test_dataset: BaseSegmentationDataset = None
         self.n_classes = n_classes
         self.samples_data_format, self.labels_data_format = self._determine_data_format()
-        self.map_look_up = self._determine_label_maps() if map_look_up is None else map_look_up
+        #self.map_look_up = self._determine_label_maps() if map_look_up is None else map_look_up
         self.label_suffix = label_suffix
         self.label_prefix = label_prefix
         self._init_datasets()
@@ -89,7 +89,7 @@ class BaseSegmentationDataModule(BasePLDataModule):
             labels_dir=self.labels_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            map_look_up=self.map_look_up,
+            map_look_up=None,
             label_suffix=self.label_suffix,
             label_prefix=self.label_prefix
         )
@@ -105,7 +105,7 @@ class BaseSegmentationDataModule(BasePLDataModule):
             labels_dir=self.labels_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            map_look_up=self.map_look_up,
+            map_look_up=None,
             label_suffix=self.label_suffix,
             label_prefix=self.label_prefix
         )
@@ -120,7 +120,7 @@ class BaseSegmentationDataModule(BasePLDataModule):
             return_trafos=self.return_unlabeled_trafos,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            map_look_up=self.map_look_up,
+            map_look_up=None,
             label_suffix=self.label_suffix,
             label_prefix=self.label_prefix
         )
@@ -132,7 +132,7 @@ class BaseSegmentationDataModule(BasePLDataModule):
             labels_dir=self.labels_dir,
             samples_data_format=self.samples_data_format,
             labels_data_format=self.labels_data_format,
-            map_look_up=self.map_look_up,
+            map_look_up=None,
             label_suffix=self.label_suffix,
             label_prefix=self.label_prefix
         )

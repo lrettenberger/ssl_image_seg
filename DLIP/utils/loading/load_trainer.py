@@ -7,7 +7,7 @@ from DLIP.utils.callbacks.callback_compose import CallbackCompose
 from DLIP.utils.loading.dict_to_config import dict_to_config
 from DLIP.utils.loading.split_parameters import split_parameters
 
-def load_trainer(train_params: dict, result_dir: str, run_name: str, config=None, data:Any = None):
+def load_trainer(train_params: dict, result_dir: str, run_name: str, config=None, data:Any = None, distributed=False,gpus_per_node=-1,num_nodes=-1):
 
     callback_args = split_parameters(
         dict_to_config(train_params),
@@ -29,10 +29,20 @@ def load_trainer(train_params: dict, result_dir: str, run_name: str, config=None
     )
     
     callbacks = CallbackCompose(Namespace(**callback_args),data,config=config)
-    instance = Trainer(
+    if distributed:
+        instance = Trainer(
         **trainer_args,
         default_root_dir=result_dir,
         logger=logger,
         callbacks=callbacks.get_composition(),
+        gpus=gpus_per_node,
+        num_nodes=num_nodes
     )
+    else:
+        instance = Trainer(
+            **trainer_args,
+            default_root_dir=result_dir,
+            logger=logger,
+            callbacks=callbacks.get_composition(),
+        )
     return instance
