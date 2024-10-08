@@ -57,9 +57,6 @@ trainer = load_trainer(
     run_name=wandb.run.name, 
     data=data,config=config,
     distributed=config['distributed'],
-    gpus_per_node=config['gpus_per_node'],
-    num_nodes=config['num_nodes']
-    
 )
 
 trainer.fit(model, data)

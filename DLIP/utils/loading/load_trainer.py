@@ -35,8 +35,6 @@ def load_trainer(train_params: dict, result_dir: str, run_name: str, config=None
         default_root_dir=result_dir,
         logger=logger,
         callbacks=callbacks.get_composition(),
-        gpus=gpus_per_node,
-        num_nodes=num_nodes
     )
     else:
         instance = Trainer(
